@@ -95,7 +95,18 @@ export default function CrudTable({ table, label, fields, rows }) {
                     onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}
                   >
                     <option value="">— Pilih —</option>
-                    {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                    {f.options.map((o, index) => {
+                    // Cek apakah data berupa object (punya label & value) atau text biasa
+                      const isObject = typeof o === 'object' && o !== null;
+                      const val = isObject ? o.value : o;
+                      const lbl = isObject ? o.label : o;
+  
+                      return (
+                        <option key={isObject ? val : index} value={val}>
+                        {lbl}
+                        </option>
+                      );
+                    })}
                   </select>
                 ) : (
                   <input
