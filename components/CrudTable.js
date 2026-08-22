@@ -65,9 +65,28 @@ export default function CrudTable({ table, label, fields, rows }) {
           <tbody className="divide-y divide-slate-100">
             {rows.map((r) => (
               <tr key={r.id}>
-                {fields.slice(0, 5).map((f) => (
-                  <td key={f.name} className="px-4 py-3">{String(r[f.name] ?? '—')}</td>
-                ))}
+                {fields.slice(0, 5).map((f) => {
+                  let displayValue = r[f.name];
+
+                // Jika kolom ini adalah 'select', kita terjemahkan ID-nya menjadi Label/Nama
+                  if (f.type === 'select' && f.options) {
+                    const matched = f.options.find((opt) => {
+                    const isObject = typeof opt === 'object' && opt !== null;
+                    const val = isObject ? opt.value : opt;
+                    return val === r[f.name];
+                  });
+
+                  if (matched) {
+                    displayValue = typeof matched === 'object' ? matched.label : matched;
+                    }
+                  }
+
+                  return (
+                    <td key={f.name} className="px-4 py-3">
+                      {String(displayValue ?? '—')}
+                    </td>
+                  );
+                })}
                 <td className="px-4 py-3 text-right">
                   <button onClick={() => openForm(r)} className="text-brandblue-600 text-xs font-semibold mr-3">Edit</button>
                   <button onClick={() => remove(r.id)} className="text-red-500 text-xs font-semibold">Hapus</button>
