@@ -1,4 +1,4 @@
-# Shaw D'SIX Community Portal
+# Shawi D'SIX Community Portal
 
 Next.js (App Router) + Supabase + Vercel.
 
