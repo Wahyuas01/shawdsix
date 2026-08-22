@@ -8,7 +8,7 @@ create extension if not exists "uuid-ossp";
 -- ------------------------------------------------------------
 -- PROFILES (terhubung ke auth.users, diisi otomatis via trigger)
 -- ------------------------------------------------------------
-create table profiles (
+create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   discord_username text,
   avatar_url text,
@@ -16,7 +16,7 @@ create table profiles (
   created_at timestamptz default now()
 );
 
-create function public.handle_new_user()
+create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.profiles (id, discord_username, avatar_url)
@@ -25,6 +25,7 @@ begin
 end;
 $$ language plpgsql security definer;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
@@ -32,7 +33,7 @@ create trigger on_auth_user_created
 -- ------------------------------------------------------------
 -- BADSIDE / FAMILY
 -- ------------------------------------------------------------
-create table badside (
+create table if not exists badside (
   id uuid primary key default uuid_generate_v4(),
   nama text not null,
   leader text,
@@ -41,7 +42,7 @@ create table badside (
   created_at timestamptz default now()
 );
 
-create table anggota_badside (
+create table if not exists anggota_badside (
   id uuid primary key default uuid_generate_v4(),
   nama text not null,
   badside_id uuid references badside(id) on delete set null,
@@ -51,7 +52,7 @@ create table anggota_badside (
   created_at timestamptz default now()
 );
 
-create table gudang_badside (
+create table if not exists gudang_badside (
   id uuid primary key default uuid_generate_v4(),
   badside_id uuid references badside(id) on delete cascade,
   ikan numeric default 0,
@@ -62,7 +63,7 @@ create table gudang_badside (
   updated_at timestamptz default now()
 );
 
-create table setoran_badside (
+create table if not exists setoran_badside (
   id uuid primary key default uuid_generate_v4(),
   badside_id uuid references badside(id) on delete cascade,
   anggota_id uuid references anggota_badside(id) on delete set null,
@@ -76,7 +77,7 @@ create table setoran_badside (
   created_at timestamptz default now()
 );
 
-create table log_anggota_badside (
+create table if not exists log_anggota_badside (
   id uuid primary key default uuid_generate_v4(),
   anggota_nama text,
   badside_id uuid references badside(id) on delete set null,
@@ -86,7 +87,7 @@ create table log_anggota_badside (
   created_at timestamptz default now()
 );
 
-create table blacklist_badside (
+create table if not exists blacklist_badside (
   id uuid primary key default uuid_generate_v4(),
   nama text,
   alasan text,
@@ -98,7 +99,7 @@ create table blacklist_badside (
 -- ------------------------------------------------------------
 -- WORKSHOP
 -- ------------------------------------------------------------
-create table workshop (
+create table if not exists workshop (
   id uuid primary key default uuid_generate_v4(),
   nama text not null,
   lokasi text,
@@ -107,7 +108,7 @@ create table workshop (
   created_at timestamptz default now()
 );
 
-create table mekanik (
+create table if not exists mekanik (
   id uuid primary key default uuid_generate_v4(),
   nama text not null,
   workshop_id uuid references workshop(id) on delete set null,
@@ -117,7 +118,7 @@ create table mekanik (
   created_at timestamptz default now()
 );
 
-create table gudang_workshop (
+create table if not exists gudang_workshop (
   id uuid primary key default uuid_generate_v4(),
   workshop_id uuid references workshop(id) on delete cascade,
   komponen text,
@@ -126,7 +127,7 @@ create table gudang_workshop (
   updated_at timestamptz default now()
 );
 
-create table setoran_modif (
+create table if not exists setoran_modif (
   id uuid primary key default uuid_generate_v4(),
   workshop_id uuid references workshop(id) on delete cascade,
   mekanik_id uuid references mekanik(id) on delete set null,
@@ -138,7 +139,7 @@ create table setoran_modif (
   created_at timestamptz default now()
 );
 
-create table komponen_tracking (
+create table if not exists komponen_tracking (
   id uuid primary key default uuid_generate_v4(),
   workshop_id uuid references workshop(id) on delete cascade,
   mekanik_id uuid references mekanik(id) on delete set null,
@@ -149,7 +150,7 @@ create table komponen_tracking (
   created_at timestamptz default now()
 );
 
-create table keuangan_workshop (
+create table if not exists keuangan_workshop (
   id uuid primary key default uuid_generate_v4(),
   workshop_id uuid references workshop(id) on delete cascade,
   tanggal date default current_date,
@@ -159,7 +160,7 @@ create table keuangan_workshop (
   created_at timestamptz default now()
 );
 
-create table gaji (
+create table if not exists gaji (
   id uuid primary key default uuid_generate_v4(),
   mekanik_id uuid references mekanik(id) on delete cascade,
   periode text,
@@ -169,7 +170,7 @@ create table gaji (
   created_at timestamptz default now()
 );
 
-create table lamaran_mekanik (
+create table if not exists lamaran_mekanik (
   id uuid primary key default uuid_generate_v4(),
   nama text,
   workshop_id uuid references workshop(id) on delete set null,
@@ -179,7 +180,7 @@ create table lamaran_mekanik (
   created_at timestamptz default now()
 );
 
-create table blacklist_workshop (
+create table if not exists blacklist_workshop (
   id uuid primary key default uuid_generate_v4(),
   nama text,
   alasan text,
@@ -188,7 +189,7 @@ create table blacklist_workshop (
   created_at timestamptz default now()
 );
 
-create table logs_workshop (
+create table if not exists logs_workshop (
   id uuid primary key default uuid_generate_v4(),
   mekanik_nama text,
   workshop_id uuid references workshop(id) on delete set null,
@@ -198,7 +199,7 @@ create table logs_workshop (
   created_at timestamptz default now()
 );
 
-create table report_mingguan (
+create table if not exists report_mingguan (
   id uuid primary key default uuid_generate_v4(),
   workshop_id uuid references workshop(id) on delete cascade,
   periode text,
@@ -208,7 +209,7 @@ create table report_mingguan (
   created_at timestamptz default now()
 );
 
-create table rating_mekanik (
+create table if not exists rating_mekanik (
   id uuid primary key default uuid_generate_v4(),
   mekanik_id uuid references mekanik(id) on delete cascade,
   dari_nama text,
@@ -218,7 +219,7 @@ create table rating_mekanik (
   created_at timestamptz default now()
 );
 
-create table chat_messages (
+create table if not exists chat_messages (
   id uuid primary key default uuid_generate_v4(),
   sender_id uuid references profiles(id) on delete set null,
   sender_name text,
@@ -244,9 +245,13 @@ begin
   ])
   loop
     execute format('alter table %I enable row level security;', t);
+    execute format('drop policy if exists "authenticated read %1$s" on %1$I;', t);
     execute format('create policy "authenticated read %1$s" on %1$I for select using (auth.role() = ''authenticated'');', t);
+    execute format('drop policy if exists "authenticated write %1$s" on %1$I;', t);
     execute format('create policy "authenticated write %1$s" on %1$I for insert with check (auth.role() = ''authenticated'');', t);
+    execute format('drop policy if exists "authenticated update %1$s" on %1$I;', t);
     execute format('create policy "authenticated update %1$s" on %1$I for update using (auth.role() = ''authenticated'');', t);
+    execute format('drop policy if exists "authenticated delete %1$s" on %1$I;', t);
     execute format('create policy "authenticated delete %1$s" on %1$I for delete using (auth.role() = ''authenticated'');', t);
   end loop;
 end $$;
@@ -261,10 +266,12 @@ create policy "user updates own profile" on profiles for update using (auth.uid(
 insert into storage.buckets (id, name, public) values ('setoran-modif', 'setoran-modif', true)
 on conflict (id) do nothing;
 
+drop policy if exists "authenticated upload screenshot" on storage.objects;
 create policy "authenticated upload screenshot"
 on storage.objects for insert
 with check (bucket_id = 'setoran-modif' and auth.role() = 'authenticated');
 
+drop policy if exists "public read screenshot" on storage.objects;
 create policy "public read screenshot"
 on storage.objects for select
 using (bucket_id = 'setoran-modif');
