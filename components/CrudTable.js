@@ -4,18 +4,20 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 /**
- * Komponen CRUD generik. Pakai ini sebagai pola untuk semua modul lain
- * (anggota-badside, gudang-badside, workshop, mekanik, dst) — tinggal
- * ganti props `table` dan `fields` sesuai kolom di supabase/schema.sql.
+ * Komponen CRUD generik dipakai semua modul.
  *
- * fields: [{ name, label, type: 'text'|'number'|'date'|'select', options? }]
+ * fields: [{ name, label, type: 'text'|'number'|'date'|'select'|'textarea'|'relation'|'file', options?, rel? }]
+ *   - type 'relation': butuh field.rel = key di prop `relations` (array of {id,label})
+ *   - type 'file': upload ke supabase storage bucket 'setoran-modif', field diisi public URL
+ * relations: { [relKey]: [{ id, label }] } — daftar opsi untuk dropdown relasi
  */
-export default function CrudTable({ table, label, fields, rows }) {
+export default function CrudTable({ table, label, fields, rows, relations = {} }) {
   const supabase = createClient();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
+  const [uploading, setUploading] = useState(false);
 
   function openForm(row = null) {
     setEditing(row);
@@ -23,12 +25,32 @@ export default function CrudTable({ table, label, fields, rows }) {
     setOpen(true);
   }
 
+  function relLabel(relKey, id) {
+    const opt = (relations[relKey] || []).find((o) => o.id === id);
+    return opt ? opt.label : '—';
+  }
+
+  async function handleFile(e, name) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const path = `${table}/${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from('setoran-modif').upload(path, file);
+    if (!error) {
+      const { data } = supabase.storage.from('setoran-modif').getPublicUrl(path);
+      setForm((f) => ({ ...f, [name]: data.publicUrl }));
+    }
+    setUploading(false);
+  }
+
   async function save(e) {
     e.preventDefault();
+    const payload = { ...form };
+    delete payload.id;
     if (editing) {
-      await supabase.from(table).update(form).eq('id', editing.id);
+      await supabase.from(table).update(payload).eq('id', editing.id);
     } else {
-      await supabase.from(table).insert(form);
+      await supabase.from(table).insert(payload);
     }
     setOpen(false);
     router.refresh();
@@ -39,6 +61,8 @@ export default function CrudTable({ table, label, fields, rows }) {
     await supabase.from(table).delete().eq('id', id);
     router.refresh();
   }
+
+  const displayFields = fields.filter((f) => f.type !== 'textarea' && f.type !== 'file').slice(0, 6);
 
   return (
     <div>
@@ -52,12 +76,12 @@ export default function CrudTable({ table, label, fields, rows }) {
         </button>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase text-slate-500">
-              {fields.slice(0, 5).map((f) => (
-                <th key={f.name} className="px-4 py-3">{f.label}</th>
+              {displayFields.map((f) => (
+                <th key={f.name} className="px-4 py-3 whitespace-nowrap">{f.label}</th>
               ))}
               <th className="px-4 py-3 text-right">Aksi</th>
             </tr>
@@ -65,69 +89,67 @@ export default function CrudTable({ table, label, fields, rows }) {
           <tbody className="divide-y divide-slate-100">
             {rows.map((r) => (
               <tr key={r.id}>
-                {fields.slice(0, 5).map((f) => {
-                  let displayValue = r[f.name];
-
-                // Jika kolom ini adalah 'select', kita terjemahkan ID-nya menjadi Label/Nama
-                  if (f.type === 'select' && f.options) {
-                    const matched = f.options.find((opt) => {
-                    const isObject = typeof opt === 'object' && opt !== null;
-                    const val = isObject ? opt.value : opt;
-                    return val === r[f.name];
-                  });
-
-                  if (matched) {
-                    displayValue = typeof matched === 'object' ? matched.label : matched;
-                    }
-                  }
-
-                  return (
-                    <td key={f.name} className="px-4 py-3">
-                      {String(displayValue ?? '—')}
-                    </td>
-                  );
-                })}
-                <td className="px-4 py-3 text-right">
+                {displayFields.map((f) => (
+                  <td key={f.name} className="px-4 py-3 whitespace-nowrap">
+                    {f.type === 'relation' ? relLabel(f.rel, r[f.name]) : String(r[f.name] ?? '—')}
+                  </td>
+                ))}
+                <td className="px-4 py-3 text-right whitespace-nowrap">
                   <button onClick={() => openForm(r)} className="text-brandblue-600 text-xs font-semibold mr-3">Edit</button>
                   <button onClick={() => remove(r.id)} className="text-red-500 text-xs font-semibold">Hapus</button>
                 </td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={fields.length + 1} className="text-center py-10 text-slate-400">Belum ada data.</td></tr>
+              <tr><td colSpan={displayFields.length + 1} className="text-center py-10 text-slate-400">Belum ada data.</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
       {open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <form onSubmit={save} className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <form onSubmit={save} className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 my-8">
             <h3 className="font-bold text-navy-950">{editing ? 'Edit' : 'Tambah'} {label}</h3>
             {fields.map((f) => (
               <div key={f.name}>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">{f.label}</label>
-                {f.type === 'select' ? (
+                {f.type === 'select' && (
                   <select
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
                     value={form[f.name] || ''}
                     onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}
                   >
                     <option value="">— Pilih —</option>
-                    {f.options.map((o, index) => {
-                    // Cek apakah data berupa object (punya label & value) atau text biasa
-                      const isObject = typeof o === 'object' && o !== null;
-                      const val = isObject ? o.value : o;
-                      const lbl = isObject ? o.label : o;
-  
-                      return (
-                        <option key={isObject ? val : index} value={val}>
-                        {lbl}
-                        </option>
-                      );
-                    })}
+                    {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
                   </select>
-                ) : (
+                )}
+                {f.type === 'relation' && (
+                  <select
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                    value={form[f.name] || ''}
+                    onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}
+                  >
+                    <option value="">— Pilih —</option>
+                    {(relations[f.rel] || []).map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                  </select>
+                )}
+                {f.type === 'textarea' && (
+                  <textarea
+                    rows={3}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                    value={form[f.name] || ''}
+                    onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}
+                  />
+                )}
+                {f.type === 'file' && (
+                  <div>
+                    <input type="file" accept="image/*" onChange={(e) => handleFile(e, f.name)} className="text-sm" />
+                    {uploading && <p className="text-xs text-slate-400 mt-1">Mengunggah...</p>}
+                    {form[f.name] && <img src={form[f.name]} alt="" className="mt-2 h-20 rounded-lg border border-slate-200 object-cover" />}
+                  </div>
+                )}
+                {!['select', 'relation', 'textarea', 'file'].includes(f.type) && (
                   <input
                     type={f.type}
                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"

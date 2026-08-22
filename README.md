@@ -1,4 +1,4 @@
-# Shawi D'SIX Community Portal
+# Shaw D'SIX Community Portal
 
 Next.js (App Router) + Supabase + Vercel.
 
@@ -8,8 +8,9 @@ Next.js (App Router) + Supabase + Vercel.
 - Login via **Discord OAuth** (`/login`, `/auth/callback`).
 - Route `/dashboard/*` diproteksi otomatis lewat `middleware.js` — belum login akan dilempar ke `/login`.
 - Halaman `/` (Home, publik) menampilkan hero + statistik komunitas langsung dari database.
-- `components/CrudTable.js` — komponen CRUD generik (tabel + modal tambah/edit/hapus) yang tersambung ke Supabase.
-- `app/dashboard/badside/page.js` — **contoh modul yang sudah 100% jalan**, dipakai sebagai pola untuk 18 modul lainnya.
+- `components/CrudTable.js` — komponen CRUD generik (tabel + modal tambah/edit/hapus, mendukung dropdown relasi & upload screenshot) yang tersambung ke Supabase.
+- **Semua 19 modul Badside/Family & Workshop sudah jadi dan tersambung ke Supabase**, termasuk dropdown relasi (mis. pilih Badside/Mekanik) dan upload screenshot untuk Setoran Modif.
+- **Chat Komunitas** pakai Supabase Realtime — pesan baru langsung muncul di semua browser yang terbuka tanpa refresh.
 
 ## 1. Setup Supabase
 
@@ -34,38 +35,23 @@ npm run dev
 3. Tambahkan environment variables yang sama (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) di **Project Settings > Environment Variables**.
 4. Deploy. Setelah dapat domain Vercel, tambahkan URL itu ke **Site URL** & **Redirect URLs** di Supabase Auth settings, dan sebagai redirect URL tambahan di Discord Developer Portal.
 
-## 4. Menambahkan 18 modul yang tersisa
+## 4. Semua modul sudah lengkap
 
-Tiap modul cuma butuh 1 file baru mengikuti pola `app/dashboard/badside/page.js`. Contoh untuk **Anggota Badside**:
+Ke-19 modul (6 Badside/Family + 13 Workshop termasuk Chat) sudah punya halaman sendiri di `app/dashboard/<nama-modul>/page.js`, semuanya mengikuti pola yang sama seperti `badside/page.js`: server component ambil data + daftar relasi dari Supabase, lalu render `<CrudTable>`.
 
-```js
-// app/dashboard/anggota-badside/page.js
-import { createClient } from '@/lib/supabase/server';
-import CrudTable from '@/components/CrudTable';
-
-const FIELDS = [
-  { name: 'nama', label: 'Nama Anggota', type: 'text' },
-  { name: 'jabatan', label: 'Jabatan', type: 'select', options: ['Leader','Wakil','Senior','Anggota'] },
-  { name: 'join_date', label: 'Tanggal Gabung', type: 'date' },
-  { name: 'status', label: 'Status', type: 'select', options: ['Aktif','Nonaktif'] },
-];
-
-export default async function Page() {
-  const supabase = createClient();
-  const { data: rows } = await supabase.from('anggota_badside').select('*').order('created_at', { ascending: false });
-  return <CrudTable table="anggota_badside" label="Anggota Badside" fields={FIELDS} rows={rows || []} />;
-}
-```
-
-Tabel & kolom yang tersedia sudah ada semua di `supabase/schema.sql` — tinggal cocokkan `FIELDS` dengan nama kolomnya. Link menu di sidebar (`app/dashboard/layout.js`) sudah disiapkan untuk semua 19 modul, jadi begitu file page-nya dibuat, otomatis nyambung.
+Kalau nanti mau nambah modul baru, tinggal duplikasi salah satu file yang sudah ada, sesuaikan nama tabel & `FIELDS`-nya, dan tambahkan link barunya di `app/dashboard/layout.js`.
 
 ### Kolom relasi (dropdown "Badside", "Mekanik", dst)
 
-Modul seperti `anggota_badside`, `setoran_badside`, `mekanik`, dll punya kolom relasi (`badside_id`, `workshop_id`, `mekanik_id`). `CrudTable` versi dasar ini belum render dropdown relasi otomatis — untuk modul dengan relasi, ambil daftar opsinya di server component lalu kirim sebagai prop tambahan ke `CrudTable`, atau perluas `CrudTable` menambahkan tipe field `'relation'` (polanya sama seperti prototype HTML yang sudah dibuat sebelumnya).
+`CrudTable` sudah mendukung tipe field `'relation'` — server component tinggal fetch daftar opsi (mis. `supabase.from('badside').select('id, nama')`) dan kirim lewat prop `relations`. Semua modul yang butuh (Anggota Badside, Setoran, Mekanik, Setoran Modif, dll) sudah dikonfigurasi begini.
 
 ### Upload screenshot (Setoran Modif)
 
-Untuk field `foto_sebelum_url` / `foto_sesudah_url`, upload file ke Supabase Storage bucket `setoran-modif` (sudah dibuat lewat `schema.sql`) pakai `supabase.storage.from('setoran-modif').upload(...)`, lalu simpan public URL-nya ke kolom terkait.
+Field `foto_sebelum_url` / `foto_sesudah_url` di halaman **Setoran Modif** pakai tipe `'file'` — otomatis upload ke Supabase Storage bucket `setoran-modif` (sudah dibuat lewat `schema.sql`) dan menyimpan public URL-nya.
+
+### Chat real-time
+
+Halaman **Chat Komunitas** subscribe ke Supabase Realtime (`postgres_changes` di tabel `chat_messages`), jadi pesan baru langsung muncul di semua browser yang lagi buka halaman itu tanpa perlu refresh.
 
 ## 5. Role & permission
 

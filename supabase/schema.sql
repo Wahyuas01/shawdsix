@@ -261,6 +261,11 @@ drop policy if exists "authenticated update profiles" on profiles;
 create policy "user updates own profile" on profiles for update using (auth.uid() = id);
 
 -- ------------------------------------------------------------
+-- REALTIME untuk chat (biar pesan baru langsung muncul)
+-- ------------------------------------------------------------
+alter publication supabase_realtime add table chat_messages;
+
+-- ------------------------------------------------------------
 -- STORAGE BUCKET untuk screenshot setoran modif
 -- ------------------------------------------------------------
 insert into storage.buckets (id, name, public) values ('setoran-modif', 'setoran-modif', true)
