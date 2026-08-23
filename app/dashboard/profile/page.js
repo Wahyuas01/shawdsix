@@ -10,26 +10,17 @@ export default async function ProfilePage() {
     supabase.from('profile_permissions').select('*').eq('id', user.id).single(),
   ]);
 
-  const badsideIds = [...new Set([...(perms?.admin_badside_ids || []), ...(perms?.member_badside_ids || [])])];
   const workshopIds = [...new Set([...(perms?.admin_workshop_ids || []), ...(perms?.member_workshop_ids || [])])];
 
-  const [{ data: badsideList }, { data: workshopList }] = await Promise.all([
-    badsideIds.length ? supabase.from('badside').select('id, nama').in('id', badsideIds) : { data: [] },
-    workshopIds.length ? supabase.from('workshop').select('id, nama').in('id', workshopIds) : { data: [] },
-  ]);
+  const { data: workshopList } = workshopIds.length
+    ? await supabase.from('workshop').select('id, nama').in('id', workshopIds)
+    : { data: [] };
 
-  const badges = [
-    ...(badsideList || []).map((b) => ({
-      label: b.nama,
-      role: perms?.admin_badside_ids?.includes(b.id) ? 'Admin Badside' : 'Anggota',
-      color: perms?.admin_badside_ids?.includes(b.id) ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-brandblue-600',
-    })),
-    ...(workshopList || []).map((w) => ({
-      label: w.nama,
-      role: perms?.admin_workshop_ids?.includes(w.id) ? 'Admin Workshop' : 'Mekanik',
-      color: perms?.admin_workshop_ids?.includes(w.id) ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600',
-    })),
-  ];
+  const badges = (workshopList || []).map((w) => ({
+    label: w.nama,
+    role: perms?.admin_workshop_ids?.includes(w.id) ? 'Admin Workshop' : 'Mekanik',
+    color: perms?.admin_workshop_ids?.includes(w.id) ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600',
+  }));
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -58,7 +49,7 @@ export default async function ProfilePage() {
         <h2 className="font-bold text-navy-950 mb-3">Keanggotaan</h2>
         {badges.length === 0 && !perms?.is_super_admin && (
           <p className="text-sm text-slate-400">
-            Belum ada badge. Pastikan kamu sudah punya role Badside/Workshop yang sesuai di server Discord, lalu klik &quot;Sinkron Role&quot;.
+            Belum ada badge. Pastikan kamu sudah punya role Mekanik yang sesuai di server Discord, lalu klik &quot;Sinkron Role&quot;.
           </p>
         )}
         <div className="flex flex-wrap gap-2">

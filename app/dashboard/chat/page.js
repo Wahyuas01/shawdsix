@@ -37,7 +37,7 @@ export default function ChatPage() {
     <div className="bg-white border border-slate-200 rounded-2xl flex flex-col h-[calc(100vh-140px)]">
       <div className="px-6 py-4 border-b border-slate-200">
         <h1 className="font-extrabold text-navy-950">Chat Komunitas</h1>
-        <p className="text-sm text-slate-500">Ruang diskusi Badside & Workshop</p>
+        <p className="text-sm text-slate-500">Ruang diskusi Workshop</p>
       </div>
       <div className="flex-1 overflow-y-auto p-5 space-y-3">
         {messages.length === 0 && <p className="text-center text-slate-400 text-sm mt-10">Belum ada pesan. Mulai obrolan pertama!</p>}

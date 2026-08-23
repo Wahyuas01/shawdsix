@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
  *
  * Kontrol izin (murni UX — RLS di database tetap jadi penegak utama):
  *   canManage: kalau false, tombol Tambah/Edit/Hapus semua disembunyikan (dipakai buat halaman
- *              yang cuma boleh diubah admin, mis. daftar Badside/Workshop itu sendiri).
+ *              yang cuma boleh diubah admin, mis. daftar Workshop itu sendiri).
  *   canCreate / canEdit: dipakai buat halaman kayak Setoran Modif — anggota biasa boleh nambah
  *              data baru (setor sendiri) tapi cuma admin yang boleh edit/hapus data siapapun.
  *              Kalau diisi, dua ini menang di atas canManage.

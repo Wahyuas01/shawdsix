@@ -8,12 +8,12 @@ export async function GET(request) {
   if (code) {
     const supabase = createClient();
     await supabase.auth.exchangeCodeForSession(code);
-    // Sinkron role Discord -> izin badside/workshop tiap kali user login.
+    // Sinkron role Discord -> izin workshop tiap kali user login.
     try {
       await fetch(`${origin}/api/sync-roles`, { method: 'POST', headers: { Cookie: request.headers.get('cookie') || '' } });
     } catch (e) {
       // Kalau gagal (mis. bot belum diset), biarkan lanjut — user tetap bisa login,
-      // cuma belum dapat izin badside/workshop sampai sync manual berhasil.
+      // cuma belum dapat izin workshop sampai sync manual berhasil.
     }
   }
 

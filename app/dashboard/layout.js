@@ -3,15 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import LogoutButton from '@/components/LogoutButton';
 
-const BADSIDE_ITEMS = [
-  { href: '/dashboard/badside', label: 'Badside' },
-  { href: '/dashboard/anggota-badside', label: 'Anggota Badside' },
-  { href: '/dashboard/gudang-badside', label: 'Gudang Badside' },
-  { href: '/dashboard/setoran-badside', label: 'Setoran Anggota' },
-  { href: '/dashboard/log-anggota-badside', label: 'Log Anggota' },
-  { href: '/dashboard/blacklist-badside', label: 'Blacklist' },
-];
-
 const WORKSHOP_ITEMS = [
   { href: '/dashboard/workshop', label: 'Workshop' },
   { href: '/dashboard/mekanik', label: 'Anggota Mekanik' },
@@ -40,15 +31,8 @@ export default async function DashboardLayout({ children }) {
   ]);
 
   const isSuperAdmin = perms?.is_super_admin || false;
-  const isAdminBadside = isSuperAdmin || (perms?.admin_badside_ids?.length || 0) > 0;
-  const isMemberBadside = (perms?.member_badside_ids?.length || 0) > 0;
   const isAdminWorkshop = isSuperAdmin || (perms?.admin_workshop_ids?.length || 0) > 0;
   const isMemberWorkshop = (perms?.member_workshop_ids?.length || 0) > 0;
-
-  const badsideItems = [
-    ...(isAdminBadside ? BADSIDE_ITEMS : []),
-    ...(isMemberBadside ? [{ href: '/dashboard/panel-badside', label: 'Panel Badside Saya' }] : []),
-  ];
 
   const workshopItems = [
     ...(isAdminWorkshop ? WORKSHOP_ITEMS : []),
@@ -58,7 +42,6 @@ export default async function DashboardLayout({ children }) {
   ];
 
   const NAV = [
-    ...(badsideItems.length ? [{ group: 'Badside / Family', items: badsideItems }] : []),
     { group: 'Workshop', items: workshopItems },
     ...(isSuperAdmin ? [{ group: 'Admin', items: [{ href: '/dashboard/role-mappings', label: 'Role Mappings' }] }] : []),
   ];
@@ -74,11 +57,6 @@ export default async function DashboardLayout({ children }) {
         </Link>
 
         <div className="flex-1 space-y-6 overflow-y-auto">
-          {!isAdminBadside && !isMemberBadside && !isAdminWorkshop && !isMemberWorkshop && (
-            <p className="text-xs text-slate-500 px-2">
-              Kamu belum terhubung ke Badside atau Workshop manapun. Cek halaman Profil untuk sinkron role Discord.
-            </p>
-          )}
           {NAV.map((g) => (
             <div key={g.group}>
               <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold px-2 mb-1">{g.group}</div>

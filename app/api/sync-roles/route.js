@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
  * 1. Pastikan user sudah login (pakai cookie session biasa).
  * 2. Ambil discord_id dari profiles.
  * 3. Tanya Discord (lewat bot token) role apa saja yang dia punya di server.
- * 4. Cocokkan ke role_mappings (diisi admin lewat Table Editor / halaman Role Mappings).
+ * 4. Cocokkan ke role_mappings (diisi admin lewat halaman Role Mappings).
  * 5. Tulis hasilnya ke profile_permissions pakai service role key (bypass RLS —
  *    inilah satu-satunya jalur yang boleh mengubah tabel ini).
  */
@@ -48,8 +48,6 @@ export async function POST() {
     // bukan menurunkan, supaya nggak ada yang kehilangan akses admin cuma
     // gara-gara belum ada role_mappings tipe 'super_admin' yang cocok.
     is_super_admin: existingPerms?.is_super_admin || false,
-    admin_badside_ids: [],
-    member_badside_ids: [],
     admin_workshop_ids: [],
     member_workshop_ids: [],
     synced_at: new Date().toISOString(),
@@ -57,37 +55,17 @@ export async function POST() {
 
   for (const m of mappings || []) {
     if (m.type === 'super_admin') result.is_super_admin = true;
-    if (m.type === 'admin_badside' && m.badside_id) result.admin_badside_ids.push(m.badside_id);
-    if (m.type === 'member_badside' && m.badside_id) result.member_badside_ids.push(m.badside_id);
     if (m.type === 'admin_workshop' && m.workshop_id) result.admin_workshop_ids.push(m.workshop_id);
     if (m.type === 'member_workshop' && m.workshop_id) result.member_workshop_ids.push(m.workshop_id);
   }
   // dedup
-  result.admin_badside_ids = [...new Set(result.admin_badside_ids)];
-  result.member_badside_ids = [...new Set(result.member_badside_ids)];
   result.admin_workshop_ids = [...new Set(result.admin_workshop_ids)];
   result.member_workshop_ids = [...new Set(result.member_workshop_ids)];
 
   await admin.from('profile_permissions').upsert({ id: user.id, ...result });
 
-  // Sinkron juga baris anggota_badside / mekanik miliknya supaya otomatis
-  // muncul di data modul (badside pertama / workshop pertama yang cocok).
-  const allBadsideIds = [...result.admin_badside_ids, ...result.member_badside_ids];
-  if (allBadsideIds.length) {
-    const { data: existing } = await admin.from('anggota_badside').select('id').eq('profile_id', user.id).maybeSingle();
-    if (existing) {
-      await admin.from('anggota_badside').update({ badside_id: allBadsideIds[0], status: 'Aktif' }).eq('id', existing.id);
-    } else {
-      await admin.from('anggota_badside').insert({
-        nama: profile.discord_username || 'Anggota',
-        badside_id: allBadsideIds[0],
-        profile_id: user.id,
-        status: 'Aktif',
-        jabatan: result.admin_badside_ids.includes(allBadsideIds[0]) ? 'Leader' : 'Anggota',
-      });
-    }
-  }
-
+  // Sinkron juga baris mekanik miliknya supaya otomatis muncul di data modul
+  // (workshop pertama yang cocok).
   const allWorkshopIds = [...result.admin_workshop_ids, ...result.member_workshop_ids];
   if (allWorkshopIds.length) {
     const { data: existing } = await admin.from('mekanik').select('id').eq('profile_id', user.id).maybeSingle();

@@ -3,16 +3,14 @@ import Link from 'next/link';
 
 export default async function HomePage() {
   const supabase = createClient();
-  const [{ count: badsideCount }, { count: workshopCount }, { count: anggotaCount }] = await Promise.all([
-    supabase.from('badside').select('*', { count: 'exact', head: true }),
+  const [{ count: workshopCount }, { count: mekanikCount }] = await Promise.all([
     supabase.from('workshop').select('*', { count: 'exact', head: true }),
-    supabase.from('anggota_badside').select('*', { count: 'exact', head: true }),
+    supabase.from('mekanik').select('*', { count: 'exact', head: true }),
   ]);
 
   const stats = [
-    { n: badsideCount || 0, label: 'Badside' },
     { n: workshopCount || 0, label: 'Workshop' },
-    { n: anggotaCount || 0, label: 'Anggota' },
+    { n: mekanikCount || 0, label: 'Mekanik' },
   ];
 
   return (
@@ -22,10 +20,10 @@ export default async function HomePage() {
           SD
         </div>
         <h1 className="font-extrabold text-3xl md:text-5xl leading-tight max-w-3xl mx-auto">
-          Satu Portal untuk Seluruh Komunitas Shaw D&apos;SIX
+          Satu Portal untuk Komunitas Workshop Shaw D&apos;SIX
         </h1>
         <p className="text-blue-100 max-w-xl mx-auto mt-4 text-sm md:text-base">
-          Kelola Badside, gudang, workshop, dan mekanik dalam satu tempat — transparan dan mudah diakses seluruh anggota.
+          Kelola workshop, gudang komponen, dan mekanik dalam satu tempat — transparan dan mudah diakses seluruh anggota.
         </p>
         <div className="flex items-center justify-center gap-3 mt-8">
           <Link href="/dashboard" className="bg-brandblue-600 hover:bg-brandblue-700 px-6 py-3 rounded-xl text-sm font-bold shadow-lg">
@@ -35,7 +33,7 @@ export default async function HomePage() {
             Join Discord
           </a>
         </div>
-        <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mt-14">
+        <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto mt-14">
           {stats.map((s) => (
             <div key={s.label} className="text-center">
               <div className="text-3xl md:text-4xl font-extrabold">{s.n}</div>
