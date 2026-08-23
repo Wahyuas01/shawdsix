@@ -53,6 +53,7 @@ export default async function DashboardLayout({ children }) {
   const workshopItems = [
     ...(isAdminWorkshop ? WORKSHOP_ITEMS : []),
     ...(isMemberWorkshop ? [{ href: '/dashboard/panel-workshop', label: 'Panel Mekanik Saya' }] : []),
+    ...(!isAdminWorkshop && !isMemberWorkshop ? [{ href: '/dashboard/panel-warga', label: 'Panel Warga' }] : []),
     ...(!isAdminWorkshop ? [{ href: '/dashboard/chat', label: 'Chat Komunitas' }] : []),
   ];
 

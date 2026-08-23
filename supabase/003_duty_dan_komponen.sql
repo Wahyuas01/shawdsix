@@ -4,6 +4,13 @@
 -- ================================================================
 
 -- ------------------------------------------------------------
+-- 0. Jaga-jaga: pastikan kolom profile_id sudah ada (harusnya sudah
+--    dibuat oleh roles_and_permissions.sql — baris ini aman diulang).
+-- ------------------------------------------------------------
+alter table anggota_badside add column if not exists profile_id uuid references profiles(id) on delete set null;
+alter table mekanik add column if not exists profile_id uuid references profiles(id) on delete set null;
+
+-- ------------------------------------------------------------
 -- 1. Tambah kolom "Komponen Keluar" & "Sisa Komponen" di Setoran Modif
 -- ------------------------------------------------------------
 alter table setoran_modif add column if not exists komponen_keluar numeric default 0;
@@ -43,7 +50,14 @@ drop policy if exists "admin delete duty_mekanik" on duty_mekanik;
 create policy "admin delete duty_mekanik" on duty_mekanik for delete using (is_any_workshop_admin());
 
 -- ------------------------------------------------------------
--- 3. Cegah role_mappings kesimpen "kosong" lagi ke depannya
+-- 4. Lamaran Mekanik: siapa saja yang login boleh apply (insert),
+--    tapi hanya admin_workshop/admin yang boleh ubah statusnya.
+-- ------------------------------------------------------------
+drop policy if exists "admin_workshop write lamaran_mekanik" on lamaran_mekanik;
+create policy "authenticated apply lamaran_mekanik" on lamaran_mekanik for insert with check (auth.role() = 'authenticated');
+
+-- ------------------------------------------------------------
+-- 5. Cegah role_mappings kesimpen "kosong" lagi ke depannya
 --    (tipe badside wajib isi Badside, tipe workshop wajib isi Workshop)
 -- ------------------------------------------------------------
 do $$
