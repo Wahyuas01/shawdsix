@@ -15,33 +15,84 @@ Next.js (App Router) + Supabase + Vercel.
 ## 1. Setup Supabase
 
 1. Buat project baru di [supabase.com](https://supabase.com).
-2. Buka **SQL Editor**, tempel isi `supabase/schema.sql`, klik Run.
+2. Buka **SQL Editor**, jalankan **berurutan**:
+   1. `supabase/schema.sql` (semua tabel data)
+   2. `supabase/roles_and_permissions.sql` (role Discord, izin admin badside/workshop, RLS bertingkat)
 3. Buka **Authentication > Providers > Discord**, aktifkan, isi Client ID & Secret dari [Discord Developer Portal](https://discord.com/developers/applications) (buat aplikasi baru → OAuth2 → tambahkan redirect URL: `https://<project-ref>.supabase.co/auth/v1/callback`).
-4. Copy `Project URL` dan `anon public key` dari **Project Settings > API**.
+4. Copy `Project URL`, `anon public key`, dan **`service_role` key** dari **Project Settings > API**.
 
-## 2. Setup lokal
+## 2. Setup Discord Bot (untuk baca role member)
+
+Login Discord OAuth cuma dapat identitas user, bukan role servernya. Untuk tahu role server (Gravencio, Admin Workshop, dst) portal ini pakai **Discord Bot** terpisah:
+
+1. Di aplikasi Discord yang sama (Developer Portal), buka tab **Bot** → buat bot → copy **Token**.
+2. Di tab Bot, aktifkan **Server Members Intent**.
+3. Invite bot itu ke server komunitas kamu (OAuth2 > URL Generator, centang scope `bot`, permission minimal "View Channels" / tanpa permission khusus juga cukup asal bot ada di server).
+4. Aktifkan Developer Mode di Discord (Settings > Advanced), klik kanan nama server → **Copy Server ID**.
+
+## 3. Setup lokal
 
 ```bash
 cp .env.local.example .env.local
-# isi NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY
+# isi semua env var (Supabase URL/anon key/service role key, Discord bot token, guild id)
 npm install
 npm run dev
 ```
 
-## 3. Deploy ke Vercel
+## 4. Deploy ke Vercel
 
 1. Push folder ini ke GitHub.
 2. Import repo di [vercel.com/new](https://vercel.com/new).
-3. Tambahkan environment variables yang sama (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) di **Project Settings > Environment Variables**.
+3. Tambahkan SEMUA environment variables dari `.env.local` di **Project Settings > Environment Variables** (termasuk `SUPABASE_SERVICE_ROLE_KEY`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID` — ini rahasia, jangan pakai prefix `NEXT_PUBLIC_`).
 4. Deploy. Setelah dapat domain Vercel, tambahkan URL itu ke **Site URL** & **Redirect URLs** di Supabase Auth settings, dan sebagai redirect URL tambahan di Discord Developer Portal.
 
-## 4. Semua modul sudah lengkap
+## 6. Menghubungkan role Discord ke Badside/Workshop (WAJIB biar sistem izin jalan)
 
-Ke-19 modul (6 Badside/Family + 13 Workshop termasuk Chat) sudah punya halaman sendiri di `app/dashboard/<nama-modul>/page.js`, semuanya mengikuti pola yang sama seperti `badside/page.js`: server component ambil data + daftar relasi dari Supabase, lalu render `<CrudTable>`.
+Setelah minimal 1 Badside dan 1 Workshop dibuat (lewat Super Admin, lihat langkah 7), buka **Table Editor > role_mappings** di Supabase, isi baris untuk tiap role Discord yang relevan:
 
-Kalau nanti mau nambah modul baru, tinggal duplikasi salah satu file yang sudah ada, sesuaikan nama tabel & `FIELDS`-nya, dan tambahkan link barunya di `app/dashboard/layout.js`.
+| discord_role_id | label | type | badside_id | workshop_id |
+|---|---|---|---|---|
+| (ID role "Gravencio" di server) | Gravencio | `member_badside` | (id badside Gravencio Gang Syndicate) | — |
+| (ID role "Admin Gravencio") | Admin Gravencio | `admin_badside` | (id badside Gravencio Gang Syndicate) | — |
+| (ID role "Mekanik Workshop X") | Mekanik Workshop X | `member_workshop` | — | (id Workshop X) |
+| (ID role "Admin Workshop X") | Admin Workshop X | `admin_workshop` | — | (id Workshop X) |
+| (ID role "Owner"/"Founder") | Super Admin | `super_admin` | — | — |
 
-### Kolom relasi (dropdown "Badside", "Mekanik", dst)
+Cara dapat `discord_role_id`: aktifkan Developer Mode di Discord, buka Server Settings > Roles, klik kanan role → **Copy Role ID**.
+
+Begitu user klik **Sinkron Role** di halaman Profil (atau otomatis saat login), portal akan:
+1. Tanya Discord role apa saja yang dipunya user itu di server.
+2. Cocokkan ke `role_mappings`.
+3. Simpan hasilnya (badside/workshop mana dia jadi anggota atau admin) ke `profile_permissions`.
+
+Sidebar, isi tabel, dan tombol Tambah/Edit/Hapus otomatis menyesuaikan — mekanik cuma lihat & bisa setor modif workshop-nya sendiri, admin workshop bisa kelola penuh data workshop-nya, dst. Aturan detail per tabel ada di `supabase/roles_and_permissions.sql`.
+
+## 7. Jadi Super Admin pertama kali
+
+Ayam-telur: butuh Super Admin buat mengisi `role_mappings`, tapi `role_mappings` juga yang menentukan siapa Super Admin. Untuk yang pertama kali, isi manual lewat SQL Editor:
+
+```sql
+update profile_permissions set is_super_admin = true where id = '<user id kamu, lihat di Authentication > Users>';
+```
+
+Setelah itu kamu bisa kelola semuanya (termasuk isi `role_mappings` untuk anggota lain) lewat Table Editor, atau nanti dibuatkan halaman admin khusus di dashboard.
+
+## 8. Halaman mana saja yang sudah menerapkan permission
+
+Modul **Badside** (semua 6 halaman) dan contoh Workshop (**Anggota Mekanik**, **Setoran Modif**) sudah menyaring baris sesuai badside/workshop yang kamu ikuti, dan menyembunyikan tombol Tambah/Edit/Hapus sesuai role (`canManage`, atau `canCreate`/`canEdit` terpisah untuk modul yang bolehnya cuma "tambah sendiri" seperti setoran). Halaman workshop lainnya (Gudang Workshop, Data Komponen, Data Uang, List Gaji, Lamaran Mekanik, Blacklist, Log, Report Mingguan, Rating) masih pola lama (semua user login bisa lihat & pakai tombolnya) — RLS di database tetap menolak aksi yang tidak diizinkan, tapi untuk UX yang rapi, terapkan pola yang sama seperti `app/dashboard/mekanik/page.js`:
+
+```js
+import { getPermissions, visibleWorkshopIds } from '@/lib/permissions';
+// ...
+const perm = await getPermissions(supabase, user.id);
+const ids = visibleWorkshopIds(perm);
+if (!perm.isSuperAdmin) query = query.in('workshop_id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
+// ...
+const canManage = perm.isSuperAdmin || perm.adminWorkshopIds.length > 0;
+<CrudTable ... canManage={canManage} />
+```
+
+## 9. Kolom relasi (dropdown "Badside", "Mekanik", dst)
 
 `CrudTable` sudah mendukung tipe field `'relation'` — server component tinggal fetch daftar opsi (mis. `supabase.from('badside').select('id, nama')`) dan kirim lewat prop `relations`. Semua modul yang butuh (Anggota Badside, Setoran, Mekanik, Setoran Modif, dll) sudah dikonfigurasi begini.
 
@@ -52,7 +103,3 @@ Field `foto_sebelum_url` / `foto_sesudah_url` di halaman **Setoran Modif** pakai
 ### Chat real-time
 
 Halaman **Chat Komunitas** subscribe ke Supabase Realtime (`postgres_changes` di tabel `chat_messages`), jadi pesan baru langsung muncul di semua browser yang lagi buka halaman itu tanpa perlu refresh.
-
-## 5. Role & permission
-
-Tabel `profiles` punya kolom `role` (`member`, `pengurus_badside`, `kepala_workshop`, `admin`). Saat ini RLS mengizinkan semua user yang login baca/tulis semua tabel — perketat sesuai kebutuhan (misal hanya `pengurus_badside` boleh edit `gudang_badside`) dengan mengubah policy di `schema.sql` memakai `exists (select 1 from profiles where id = auth.uid() and role = '...')`.

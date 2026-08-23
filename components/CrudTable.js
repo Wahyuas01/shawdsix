@@ -10,14 +10,24 @@ import { useRouter } from 'next/navigation';
  *   - type 'relation': butuh field.rel = key di prop `relations` (array of {id,label})
  *   - type 'file': upload ke supabase storage bucket 'setoran-modif', field diisi public URL
  * relations: { [relKey]: [{ id, label }] } — daftar opsi untuk dropdown relasi
+ *
+ * Kontrol izin (murni UX — RLS di database tetap jadi penegak utama):
+ *   canManage: kalau false, tombol Tambah/Edit/Hapus semua disembunyikan (dipakai buat halaman
+ *              yang cuma boleh diubah admin, mis. daftar Badside/Workshop itu sendiri).
+ *   canCreate / canEdit: dipakai buat halaman kayak Setoran Modif — anggota biasa boleh nambah
+ *              data baru (setor sendiri) tapi cuma admin yang boleh edit/hapus data siapapun.
+ *              Kalau diisi, dua ini menang di atas canManage.
  */
-export default function CrudTable({ table, label, fields, rows, relations = {} }) {
+export default function CrudTable({ table, label, fields, rows, relations = {}, canManage = true, canCreate, canEdit }) {
   const supabase = createClient();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const [uploading, setUploading] = useState(false);
+
+  const allowCreate = canCreate ?? canManage;
+  const allowEdit = canEdit ?? canManage;
 
   function openForm(row = null) {
     setEditing(row);
@@ -71,9 +81,11 @@ export default function CrudTable({ table, label, fields, rows, relations = {} }
           <h1 className="font-extrabold text-xl text-navy-950">{label}</h1>
           <p className="text-sm text-slate-500">{rows.length} data tercatat</p>
         </div>
-        <button onClick={() => openForm()} className="bg-brandblue-600 hover:bg-brandblue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
-          + Tambah {label}
-        </button>
+        {allowCreate && (
+          <button onClick={() => openForm()} className="bg-brandblue-600 hover:bg-brandblue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
+            + Tambah {label}
+          </button>
+        )}
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl overflow-x-auto">
@@ -83,7 +95,7 @@ export default function CrudTable({ table, label, fields, rows, relations = {} }
               {displayFields.map((f) => (
                 <th key={f.name} className="px-4 py-3 whitespace-nowrap">{f.label}</th>
               ))}
-              <th className="px-4 py-3 text-right">Aksi</th>
+              {(allowEdit) && <th className="px-4 py-3 text-right">Aksi</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -94,10 +106,12 @@ export default function CrudTable({ table, label, fields, rows, relations = {} }
                     {f.type === 'relation' ? relLabel(f.rel, r[f.name]) : String(r[f.name] ?? '—')}
                   </td>
                 ))}
-                <td className="px-4 py-3 text-right whitespace-nowrap">
-                  <button onClick={() => openForm(r)} className="text-brandblue-600 text-xs font-semibold mr-3">Edit</button>
-                  <button onClick={() => remove(r.id)} className="text-red-500 text-xs font-semibold">Hapus</button>
-                </td>
+                {allowEdit && (
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    <button onClick={() => openForm(r)} className="text-brandblue-600 text-xs font-semibold mr-3">Edit</button>
+                    <button onClick={() => remove(r.id)} className="text-red-500 text-xs font-semibold">Hapus</button>
+                  </td>
+                )}
               </tr>
             ))}
             {rows.length === 0 && (
