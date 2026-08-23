@@ -25,6 +25,7 @@ export default function CrudTable({ table, label, fields, rows, relations = {}, 
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
 
   const allowCreate = canCreate ?? canManage;
   const allowEdit = canEdit ?? canManage;
@@ -32,6 +33,7 @@ export default function CrudTable({ table, label, fields, rows, relations = {}, 
   function openForm(row = null) {
     setEditing(row);
     setForm(row || {});
+    setError(null);
     setOpen(true);
   }
 
@@ -55,12 +57,25 @@ export default function CrudTable({ table, label, fields, rows, relations = {}, 
 
   async function save(e) {
     e.preventDefault();
-    const payload = { ...form };
-    delete payload.id;
-    if (editing) {
-      await supabase.from(table).update(payload).eq('id', editing.id);
-    } else {
-      await supabase.from(table).insert(payload);
+    setError(null);
+
+    // Kolom relasi/angka/tanggal yang dikosongkan (mis. dropdown "— Pilih —"
+    // dibiarkan) terkirim sebagai string kosong "" oleh browser. Kolom UUID/
+    // numeric/date di Postgres menolak "" (bukan NULL), jadi insert gagal
+    // diam-diam. Di sini kita ubah "" jadi null dulu sebelum dikirim.
+    const payload = {};
+    for (const f of fields) {
+      const v = form[f.name];
+      payload[f.name] = v === '' || v === undefined ? null : v;
+    }
+
+    const { error: err } = editing
+      ? await supabase.from(table).update(payload).eq('id', editing.id)
+      : await supabase.from(table).insert(payload);
+
+    if (err) {
+      setError(err.message);
+      return;
     }
     setOpen(false);
     router.refresh();
@@ -68,7 +83,8 @@ export default function CrudTable({ table, label, fields, rows, relations = {}, 
 
   async function remove(id) {
     if (!confirm('Hapus data ini?')) return;
-    await supabase.from(table).delete().eq('id', id);
+    const { error: err } = await supabase.from(table).delete().eq('id', id);
+    if (err) alert('Gagal menghapus: ' + err.message);
     router.refresh();
   }
 
@@ -125,6 +141,9 @@ export default function CrudTable({ table, label, fields, rows, relations = {}, 
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
           <form onSubmit={save} className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 my-8">
             <h3 className="font-bold text-navy-950">{editing ? 'Edit' : 'Tambah'} {label}</h3>
+            {error && (
+              <div className="bg-red-50 text-red-600 text-xs rounded-lg px-3 py-2">{error}</div>
+            )}
             {fields.map((f) => (
               <div key={f.name}>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">{f.label}</label>
