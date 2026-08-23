@@ -52,9 +52,8 @@ create table if not exists role_mappings (
 alter table role_mappings enable row level security;
 drop policy if exists "authenticated read role_mappings" on role_mappings;
 create policy "authenticated read role_mappings" on role_mappings for select using (auth.role() = 'authenticated');
--- Sama seperti profile_permissions: hanya service role yang boleh menulis
--- (kelola lewat Supabase Table Editor sebagai admin, atau lewat halaman
--- admin khusus kalau nanti dibuat).
+-- Kebijakan insert/update/delete untuk role_mappings (butuh fungsi is_super_admin(),
+-- makanya ditaruh di bawah dekat fungsi-fungsi helper, lihat bagian 5b.
 
 -- ------------------------------------------------------------
 -- 4. Update trigger: buat baris profile_permissions default saat user baru daftar,
@@ -102,6 +101,18 @@ create or replace function is_any_workshop_admin() returns boolean as $$
 $$ language sql security definer stable;
 
 -- ------------------------------------------------------------
+-- 5b. role_mappings: buka insert/update/delete untuk Super Admin
+-- (dipakai halaman /dashboard/role-mappings di web). Ditaruh di sini
+-- karena butuh fungsi is_super_admin() yang baru saja didefinisikan.
+-- ------------------------------------------------------------
+drop policy if exists "super admin insert role_mappings" on role_mappings;
+create policy "super admin insert role_mappings" on role_mappings for insert with check (is_super_admin());
+drop policy if exists "super admin update role_mappings" on role_mappings;
+create policy "super admin update role_mappings" on role_mappings for update using (is_super_admin()) with check (is_super_admin());
+drop policy if exists "super admin delete role_mappings" on role_mappings;
+create policy "super admin delete role_mappings" on role_mappings for delete using (is_super_admin());
+
+-- ------------------------------------------------------------
 -- 6. RLS bertingkat per tabel (menggantikan policy generik "authenticated write"
 -- dari schema.sql untuk tabel Badside & Workshop).
 -- Pola: SELECT tetap terbuka untuk semua yang login (transparansi komunitas);
@@ -113,22 +124,31 @@ $$ language sql security definer stable;
 drop policy if exists "authenticated write badside" on badside;
 drop policy if exists "authenticated update badside" on badside;
 drop policy if exists "authenticated delete badside" on badside;
+drop policy if exists "insert badside" on badside;
 create policy "insert badside" on badside for insert with check (is_super_admin());
+drop policy if exists "update badside" on badside;
 create policy "update badside" on badside for update using (is_admin_badside(id)) with check (is_admin_badside(id));
+drop policy if exists "delete badside" on badside;
 create policy "delete badside" on badside for delete using (is_super_admin());
 
 drop policy if exists "authenticated write anggota_badside" on anggota_badside;
 drop policy if exists "authenticated update anggota_badside" on anggota_badside;
 drop policy if exists "authenticated delete anggota_badside" on anggota_badside;
+drop policy if exists "insert anggota_badside" on anggota_badside;
 create policy "insert anggota_badside" on anggota_badside for insert with check (is_admin_badside(badside_id));
+drop policy if exists "update anggota_badside" on anggota_badside;
 create policy "update anggota_badside" on anggota_badside for update using (is_admin_badside(badside_id)) with check (is_admin_badside(badside_id));
+drop policy if exists "delete anggota_badside" on anggota_badside;
 create policy "delete anggota_badside" on anggota_badside for delete using (is_admin_badside(badside_id));
 
 drop policy if exists "authenticated write gudang_badside" on gudang_badside;
 drop policy if exists "authenticated update gudang_badside" on gudang_badside;
 drop policy if exists "authenticated delete gudang_badside" on gudang_badside;
+drop policy if exists "insert gudang_badside" on gudang_badside;
 create policy "insert gudang_badside" on gudang_badside for insert with check (is_admin_badside(badside_id));
+drop policy if exists "update gudang_badside" on gudang_badside;
 create policy "update gudang_badside" on gudang_badside for update using (is_admin_badside(badside_id)) with check (is_admin_badside(badside_id));
+drop policy if exists "delete gudang_badside" on gudang_badside;
 create policy "delete gudang_badside" on gudang_badside for delete using (is_admin_badside(badside_id));
 
 -- setoran_badside: anggota biasa (member) boleh mencatat setoran sendiri;
@@ -136,80 +156,110 @@ create policy "delete gudang_badside" on gudang_badside for delete using (is_adm
 drop policy if exists "authenticated write setoran_badside" on setoran_badside;
 drop policy if exists "authenticated update setoran_badside" on setoran_badside;
 drop policy if exists "authenticated delete setoran_badside" on setoran_badside;
+drop policy if exists "insert setoran_badside" on setoran_badside;
 create policy "insert setoran_badside" on setoran_badside for insert with check (is_member_badside(badside_id));
+drop policy if exists "update setoran_badside" on setoran_badside;
 create policy "update setoran_badside" on setoran_badside for update using (is_admin_badside(badside_id)) with check (is_admin_badside(badside_id));
+drop policy if exists "delete setoran_badside" on setoran_badside;
 create policy "delete setoran_badside" on setoran_badside for delete using (is_admin_badside(badside_id));
 
 drop policy if exists "authenticated write log_anggota_badside" on log_anggota_badside;
 drop policy if exists "authenticated update log_anggota_badside" on log_anggota_badside;
 drop policy if exists "authenticated delete log_anggota_badside" on log_anggota_badside;
+drop policy if exists "insert log_anggota_badside" on log_anggota_badside;
 create policy "insert log_anggota_badside" on log_anggota_badside for insert with check (is_admin_badside(badside_id));
+drop policy if exists "update log_anggota_badside" on log_anggota_badside;
 create policy "update log_anggota_badside" on log_anggota_badside for update using (is_admin_badside(badside_id)) with check (is_admin_badside(badside_id));
+drop policy if exists "delete log_anggota_badside" on log_anggota_badside;
 create policy "delete log_anggota_badside" on log_anggota_badside for delete using (is_admin_badside(badside_id));
 
 drop policy if exists "authenticated write blacklist_badside" on blacklist_badside;
 drop policy if exists "authenticated update blacklist_badside" on blacklist_badside;
 drop policy if exists "authenticated delete blacklist_badside" on blacklist_badside;
+drop policy if exists "insert blacklist_badside" on blacklist_badside;
 create policy "insert blacklist_badside" on blacklist_badside for insert with check (is_any_badside_admin());
+drop policy if exists "update blacklist_badside" on blacklist_badside;
 create policy "update blacklist_badside" on blacklist_badside for update using (is_any_badside_admin()) with check (is_any_badside_admin());
+drop policy if exists "delete blacklist_badside" on blacklist_badside;
 create policy "delete blacklist_badside" on blacklist_badside for delete using (is_any_badside_admin());
 
 -- WORKSHOP
 drop policy if exists "authenticated write workshop" on workshop;
 drop policy if exists "authenticated update workshop" on workshop;
 drop policy if exists "authenticated delete workshop" on workshop;
+drop policy if exists "insert workshop" on workshop;
 create policy "insert workshop" on workshop for insert with check (is_super_admin());
+drop policy if exists "update workshop" on workshop;
 create policy "update workshop" on workshop for update using (is_admin_workshop(id)) with check (is_admin_workshop(id));
+drop policy if exists "delete workshop" on workshop;
 create policy "delete workshop" on workshop for delete using (is_super_admin());
 
 drop policy if exists "authenticated write mekanik" on mekanik;
 drop policy if exists "authenticated update mekanik" on mekanik;
 drop policy if exists "authenticated delete mekanik" on mekanik;
+drop policy if exists "insert mekanik" on mekanik;
 create policy "insert mekanik" on mekanik for insert with check (is_admin_workshop(workshop_id));
+drop policy if exists "update mekanik" on mekanik;
 create policy "update mekanik" on mekanik for update using (is_admin_workshop(workshop_id)) with check (is_admin_workshop(workshop_id));
+drop policy if exists "delete mekanik" on mekanik;
 create policy "delete mekanik" on mekanik for delete using (is_admin_workshop(workshop_id));
 
 drop policy if exists "authenticated write gudang_workshop" on gudang_workshop;
 drop policy if exists "authenticated update gudang_workshop" on gudang_workshop;
 drop policy if exists "authenticated delete gudang_workshop" on gudang_workshop;
+drop policy if exists "insert gudang_workshop" on gudang_workshop;
 create policy "insert gudang_workshop" on gudang_workshop for insert with check (is_admin_workshop(workshop_id));
+drop policy if exists "update gudang_workshop" on gudang_workshop;
 create policy "update gudang_workshop" on gudang_workshop for update using (is_admin_workshop(workshop_id)) with check (is_admin_workshop(workshop_id));
+drop policy if exists "delete gudang_workshop" on gudang_workshop;
 create policy "delete gudang_workshop" on gudang_workshop for delete using (is_admin_workshop(workshop_id));
 
 -- setoran_modif: mekanik (member workshop) boleh setor sendiri; ubah/hapus admin workshop.
 drop policy if exists "authenticated write setoran_modif" on setoran_modif;
 drop policy if exists "authenticated update setoran_modif" on setoran_modif;
 drop policy if exists "authenticated delete setoran_modif" on setoran_modif;
+drop policy if exists "insert setoran_modif" on setoran_modif;
 create policy "insert setoran_modif" on setoran_modif for insert with check (is_member_workshop(workshop_id));
+drop policy if exists "update setoran_modif" on setoran_modif;
 create policy "update setoran_modif" on setoran_modif for update using (is_admin_workshop(workshop_id)) with check (is_admin_workshop(workshop_id));
+drop policy if exists "delete setoran_modif" on setoran_modif;
 create policy "delete setoran_modif" on setoran_modif for delete using (is_admin_workshop(workshop_id));
 
 drop policy if exists "authenticated write komponen_tracking" on komponen_tracking;
 drop policy if exists "authenticated update komponen_tracking" on komponen_tracking;
 drop policy if exists "authenticated delete komponen_tracking" on komponen_tracking;
+drop policy if exists "insert komponen_tracking" on komponen_tracking;
 create policy "insert komponen_tracking" on komponen_tracking for insert with check (is_admin_workshop(workshop_id));
+drop policy if exists "update komponen_tracking" on komponen_tracking;
 create policy "update komponen_tracking" on komponen_tracking for update using (is_admin_workshop(workshop_id)) with check (is_admin_workshop(workshop_id));
+drop policy if exists "delete komponen_tracking" on komponen_tracking;
 create policy "delete komponen_tracking" on komponen_tracking for delete using (is_admin_workshop(workshop_id));
 
 drop policy if exists "authenticated write keuangan_workshop" on keuangan_workshop;
 drop policy if exists "authenticated update keuangan_workshop" on keuangan_workshop;
 drop policy if exists "authenticated delete keuangan_workshop" on keuangan_workshop;
+drop policy if exists "insert keuangan_workshop" on keuangan_workshop;
 create policy "insert keuangan_workshop" on keuangan_workshop for insert with check (is_admin_workshop(workshop_id));
+drop policy if exists "update keuangan_workshop" on keuangan_workshop;
 create policy "update keuangan_workshop" on keuangan_workshop for update using (is_admin_workshop(workshop_id)) with check (is_admin_workshop(workshop_id));
+drop policy if exists "delete keuangan_workshop" on keuangan_workshop;
 create policy "delete keuangan_workshop" on keuangan_workshop for delete using (is_admin_workshop(workshop_id));
 
 -- gaji: workshop-nya diturunkan lewat relasi ke mekanik
 drop policy if exists "authenticated write gaji" on gaji;
 drop policy if exists "authenticated update gaji" on gaji;
 drop policy if exists "authenticated delete gaji" on gaji;
+drop policy if exists "insert gaji" on gaji;
 create policy "insert gaji" on gaji for insert with check (
   exists (select 1 from mekanik m where m.id = mekanik_id and is_admin_workshop(m.workshop_id))
 );
+drop policy if exists "update gaji" on gaji;
 create policy "update gaji" on gaji for update using (
   exists (select 1 from mekanik m where m.id = mekanik_id and is_admin_workshop(m.workshop_id))
 ) with check (
   exists (select 1 from mekanik m where m.id = mekanik_id and is_admin_workshop(m.workshop_id))
 );
+drop policy if exists "delete gaji" on gaji;
 create policy "delete gaji" on gaji for delete using (
   exists (select 1 from mekanik m where m.id = mekanik_id and is_admin_workshop(m.workshop_id))
 );
@@ -218,41 +268,56 @@ create policy "delete gaji" on gaji for delete using (
 drop policy if exists "authenticated write lamaran_mekanik" on lamaran_mekanik;
 drop policy if exists "authenticated update lamaran_mekanik" on lamaran_mekanik;
 drop policy if exists "authenticated delete lamaran_mekanik" on lamaran_mekanik;
+drop policy if exists "insert lamaran_mekanik" on lamaran_mekanik;
 create policy "insert lamaran_mekanik" on lamaran_mekanik for insert with check (auth.role() = 'authenticated');
+drop policy if exists "update lamaran_mekanik" on lamaran_mekanik;
 create policy "update lamaran_mekanik" on lamaran_mekanik for update using (is_admin_workshop(workshop_id)) with check (is_admin_workshop(workshop_id));
+drop policy if exists "delete lamaran_mekanik" on lamaran_mekanik;
 create policy "delete lamaran_mekanik" on lamaran_mekanik for delete using (is_admin_workshop(workshop_id));
 
 drop policy if exists "authenticated write blacklist_workshop" on blacklist_workshop;
 drop policy if exists "authenticated update blacklist_workshop" on blacklist_workshop;
 drop policy if exists "authenticated delete blacklist_workshop" on blacklist_workshop;
+drop policy if exists "insert blacklist_workshop" on blacklist_workshop;
 create policy "insert blacklist_workshop" on blacklist_workshop for insert with check (is_any_workshop_admin());
+drop policy if exists "update blacklist_workshop" on blacklist_workshop;
 create policy "update blacklist_workshop" on blacklist_workshop for update using (is_any_workshop_admin()) with check (is_any_workshop_admin());
+drop policy if exists "delete blacklist_workshop" on blacklist_workshop;
 create policy "delete blacklist_workshop" on blacklist_workshop for delete using (is_any_workshop_admin());
 
 drop policy if exists "authenticated write logs_workshop" on logs_workshop;
 drop policy if exists "authenticated update logs_workshop" on logs_workshop;
 drop policy if exists "authenticated delete logs_workshop" on logs_workshop;
+drop policy if exists "insert logs_workshop" on logs_workshop;
 create policy "insert logs_workshop" on logs_workshop for insert with check (is_admin_workshop(workshop_id));
+drop policy if exists "update logs_workshop" on logs_workshop;
 create policy "update logs_workshop" on logs_workshop for update using (is_admin_workshop(workshop_id)) with check (is_admin_workshop(workshop_id));
+drop policy if exists "delete logs_workshop" on logs_workshop;
 create policy "delete logs_workshop" on logs_workshop for delete using (is_admin_workshop(workshop_id));
 
 drop policy if exists "authenticated write report_mingguan" on report_mingguan;
 drop policy if exists "authenticated update report_mingguan" on report_mingguan;
 drop policy if exists "authenticated delete report_mingguan" on report_mingguan;
+drop policy if exists "insert report_mingguan" on report_mingguan;
 create policy "insert report_mingguan" on report_mingguan for insert with check (is_admin_workshop(workshop_id));
+drop policy if exists "update report_mingguan" on report_mingguan;
 create policy "update report_mingguan" on report_mingguan for update using (is_admin_workshop(workshop_id)) with check (is_admin_workshop(workshop_id));
+drop policy if exists "delete report_mingguan" on report_mingguan;
 create policy "delete report_mingguan" on report_mingguan for delete using (is_admin_workshop(workshop_id));
 
 -- rating_mekanik: siapapun yang login boleh kasih rating (insert), admin workshop yang moderasi
 drop policy if exists "authenticated write rating_mekanik" on rating_mekanik;
 drop policy if exists "authenticated update rating_mekanik" on rating_mekanik;
 drop policy if exists "authenticated delete rating_mekanik" on rating_mekanik;
+drop policy if exists "insert rating_mekanik" on rating_mekanik;
 create policy "insert rating_mekanik" on rating_mekanik for insert with check (auth.role() = 'authenticated');
+drop policy if exists "update rating_mekanik" on rating_mekanik;
 create policy "update rating_mekanik" on rating_mekanik for update using (
   exists (select 1 from mekanik m where m.id = mekanik_id and is_admin_workshop(m.workshop_id))
 ) with check (
   exists (select 1 from mekanik m where m.id = mekanik_id and is_admin_workshop(m.workshop_id))
 );
+drop policy if exists "delete rating_mekanik" on rating_mekanik;
 create policy "delete rating_mekanik" on rating_mekanik for delete using (
   exists (select 1 from mekanik m where m.id = mekanik_id and is_admin_workshop(m.workshop_id))
 );

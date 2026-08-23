@@ -258,12 +258,21 @@ end $$;
 
 -- profiles: user hanya boleh update profil sendiri (override policy generik di atas)
 drop policy if exists "authenticated update profiles" on profiles;
+drop policy if exists "user updates own profile" on profiles;
 create policy "user updates own profile" on profiles for update using (auth.uid() = id);
 
 -- ------------------------------------------------------------
 -- REALTIME untuk chat (biar pesan baru langsung muncul)
 -- ------------------------------------------------------------
-alter publication supabase_realtime add table chat_messages;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'chat_messages'
+  ) then
+    alter publication supabase_realtime add table chat_messages;
+  end if;
+end $$;
 
 -- ------------------------------------------------------------
 -- STORAGE BUCKET untuk screenshot setoran modif

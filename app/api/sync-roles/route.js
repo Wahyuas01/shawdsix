@@ -36,8 +36,18 @@ export async function POST() {
     .select('*')
     .in('discord_role_id', discordRoleIds.length ? discordRoleIds : ['__none__']);
 
+  const { data: existingPerms } = await admin
+    .from('profile_permissions')
+    .select('is_super_admin')
+    .eq('id', user.id)
+    .maybeSingle();
+
   const result = {
-    is_super_admin: false,
+    // Super Admin yang sudah aktif (mis. di-set manual lewat SQL) TIDAK PERNAH
+    // diturunkan otomatis oleh sinkron ini — sinkron cuma boleh MENAIKKAN status,
+    // bukan menurunkan, supaya nggak ada yang kehilangan akses admin cuma
+    // gara-gara belum ada role_mappings tipe 'super_admin' yang cocok.
+    is_super_admin: existingPerms?.is_super_admin || false,
     admin_badside_ids: [],
     member_badside_ids: [],
     admin_workshop_ids: [],
