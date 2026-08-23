@@ -6,11 +6,8 @@ const FIELDS = [
   { name: 'workshop_id', label: 'Workshop', type: 'relation', rel: 'workshop' },
   { name: 'mekanik_id', label: 'Mekanik', type: 'relation', rel: 'mekanik' },
   { name: 'tanggal', label: 'Tanggal', type: 'date' },
-  { name: 'jumlah', label: 'Jumlah Setoran (Rp)', type: 'number' },
-  { name: 'komponen_keluar', label: 'Komponen Keluar', type: 'number' },
-  { name: 'sisa_komponen', label: 'Sisa Komponen', type: 'number' },
-  { name: 'foto_sebelum_url', label: 'Screenshot Sebelum', type: 'file' },
-  { name: 'foto_sesudah_url', label: 'Screenshot Sesudah', type: 'file' },
+  { name: 'jam_mulai', label: 'Jam Mulai', type: 'time' },
+  { name: 'jam_selesai', label: 'Jam Selesai', type: 'time' },
   { name: 'catatan', label: 'Catatan', type: 'textarea' },
 ];
 
@@ -20,7 +17,7 @@ export default async function Page() {
   const perm = await getPermissions(supabase, user.id);
   const ids = visibleWorkshopIds(perm);
 
-  let query = supabase.from('setoran_modif').select('*').order('tanggal', { ascending: false });
+  let query = supabase.from('duty_mekanik').select('*').order('tanggal', { ascending: false });
   if (!perm.isSuperAdmin) query = query.in('workshop_id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
   const [{ data: rows }, { data: workshop }, { data: mekanik }] = await Promise.all([
     query,
@@ -31,8 +28,8 @@ export default async function Page() {
     workshop: (workshop || []).map((w) => ({ id: w.id, label: w.nama })),
     mekanik: (mekanik || []).map((m) => ({ id: m.id, label: m.nama })),
   };
-  // Mekanik (member workshop) boleh setor sendiri, ubah/hapus khusus admin workshop.
+  // Mekanik boleh lapor duty sendiri lewat Panel Mekanik; ubah/hapus khusus admin workshop.
   const canCreate = perm.isSuperAdmin || ids.length > 0;
   const canEdit = perm.isSuperAdmin || perm.adminWorkshopIds.length > 0;
-  return <CrudTable table="setoran_modif" label="Setoran Modif" fields={FIELDS} rows={rows || []} relations={relations} canCreate={canCreate} canEdit={canEdit} />;
+  return <CrudTable table="duty_mekanik" label="Log Duty Mekanik" fields={FIELDS} rows={rows || []} relations={relations} canCreate={canCreate} canEdit={canEdit} />;
 }

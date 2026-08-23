@@ -7,6 +7,8 @@ export default function SetoranModifForm({ workshopId, mekanikId }) {
   const supabase = createClient();
   const router = useRouter();
   const [jumlah, setJumlah] = useState('');
+  const [komponenKeluar, setKomponenKeluar] = useState('');
+  const [sisaKomponen, setSisaKomponen] = useState('');
   const [catatan, setCatatan] = useState('');
   const [sebelum, setSebelum] = useState('');
   const [sesudah, setSesudah] = useState('');
@@ -37,26 +39,36 @@ export default function SetoranModifForm({ workshopId, mekanikId }) {
       mekanik_id: mekanikId,
       tanggal: new Date().toISOString().slice(0, 10),
       jumlah: jumlah || 0,
+      komponen_keluar: komponenKeluar || 0,
+      sisa_komponen: sisaKomponen || 0,
       catatan,
       foto_sebelum_url: sebelum,
       foto_sesudah_url: sesudah,
     });
     setSaving(false);
-    setJumlah(''); setCatatan(''); setSebelum(''); setSesudah('');
+    setJumlah(''); setKomponenKeluar(''); setSisaKomponen(''); setCatatan(''); setSebelum(''); setSesudah('');
     router.refresh();
   }
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <div className="grid md:grid-cols-2 gap-3">
+      <div className="grid md:grid-cols-3 gap-3">
         <div>
           <label className="block text-xs font-semibold text-slate-600 mb-1">Jumlah Setoran (Rp)</label>
           <input type="number" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" value={jumlah} onChange={(e) => setJumlah(e.target.value)} required />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">Catatan</label>
-          <input className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" value={catatan} onChange={(e) => setCatatan(e.target.value)} />
+          <label className="block text-xs font-semibold text-slate-600 mb-1">Komponen Keluar</label>
+          <input type="number" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" value={komponenKeluar} onChange={(e) => setKomponenKeluar(e.target.value)} />
         </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">Sisa Komponen</label>
+          <input type="number" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" value={sisaKomponen} onChange={(e) => setSisaKomponen(e.target.value)} />
+        </div>
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 mb-1">Catatan</label>
+        <input className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" value={catatan} onChange={(e) => setCatatan(e.target.value)} />
       </div>
       <div className="grid md:grid-cols-2 gap-3">
         <div>

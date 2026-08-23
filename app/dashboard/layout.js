@@ -17,6 +17,7 @@ const WORKSHOP_ITEMS = [
   { href: '/dashboard/mekanik', label: 'Anggota Mekanik' },
   { href: '/dashboard/gudang-workshop', label: 'Gudang Workshop' },
   { href: '/dashboard/setoran-modif', label: 'Setoran Modif' },
+  { href: '/dashboard/duty-mekanik', label: 'Log Duty Mekanik' },
   { href: '/dashboard/komponen-tracking', label: 'Data Komponen' },
   { href: '/dashboard/keuangan-workshop', label: 'Data Uang' },
   { href: '/dashboard/gaji', label: 'List Gaji' },
@@ -44,17 +45,16 @@ export default async function DashboardLayout({ children }) {
   const isAdminWorkshop = isSuperAdmin || (perms?.admin_workshop_ids?.length || 0) > 0;
   const isMemberWorkshop = (perms?.member_workshop_ids?.length || 0) > 0;
 
-  const badsideItems = isAdminBadside
-    ? BADSIDE_ITEMS
-    : isMemberBadside
-      ? [{ href: '/dashboard/panel-badside', label: 'Panel Badside Saya' }]
-      : [];
+  const badsideItems = [
+    ...(isAdminBadside ? BADSIDE_ITEMS : []),
+    ...(isMemberBadside ? [{ href: '/dashboard/panel-badside', label: 'Panel Badside Saya' }] : []),
+  ];
 
-  const workshopItems = isAdminWorkshop
-    ? WORKSHOP_ITEMS
-    : isMemberWorkshop
-      ? [{ href: '/dashboard/panel-workshop', label: 'Panel Mekanik Saya' }, { href: '/dashboard/chat', label: 'Chat Komunitas' }]
-      : [{ href: '/dashboard/chat', label: 'Chat Komunitas' }];
+  const workshopItems = [
+    ...(isAdminWorkshop ? WORKSHOP_ITEMS : []),
+    ...(isMemberWorkshop ? [{ href: '/dashboard/panel-workshop', label: 'Panel Mekanik Saya' }] : []),
+    ...(!isAdminWorkshop ? [{ href: '/dashboard/chat', label: 'Chat Komunitas' }] : []),
+  ];
 
   const NAV = [
     ...(badsideItems.length ? [{ group: 'Badside / Family', items: badsideItems }] : []),

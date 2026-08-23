@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import SetoranModifForm from '@/components/SetoranModifForm';
+import DutyForm from '@/components/DutyForm';
 
 export default async function PanelWorkshopPage() {
   const supabase = createClient();
@@ -9,10 +10,11 @@ export default async function PanelWorkshopPage() {
   const { data: mekanik } = await supabase.from('mekanik').select('*, workshop(*)').eq('profile_id', user.id).maybeSingle();
   if (!mekanik) redirect('/dashboard');
 
-  const [{ data: setoranSaya }, { data: gajiSaya }, { data: ratingSaya }] = await Promise.all([
+  const [{ data: setoranSaya }, { data: gajiSaya }, { data: ratingSaya }, { data: dutySaya }] = await Promise.all([
     supabase.from('setoran_modif').select('*').eq('mekanik_id', mekanik.id).order('tanggal', { ascending: false }),
     supabase.from('gaji').select('*').eq('mekanik_id', mekanik.id).order('created_at', { ascending: false }),
     supabase.from('rating_mekanik').select('*').eq('mekanik_id', mekanik.id).order('tanggal', { ascending: false }),
+    supabase.from('duty_mekanik').select('*').eq('mekanik_id', mekanik.id).order('tanggal', { ascending: false }).limit(15),
   ]);
 
   const avgRating = ratingSaya?.length
@@ -35,6 +37,29 @@ export default async function PanelWorkshopPage() {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-5">
+        <h2 className="font-bold text-navy-950 mb-3 text-sm">Lapor Duty</h2>
+        <DutyForm workshopId={mekanik.workshop_id} mekanikId={mekanik.id} />
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-200 font-bold text-navy-950 text-sm">Laporan Duty Saya</div>
+        <table className="w-full text-sm">
+          <tbody className="divide-y divide-slate-100">
+            {(dutySaya || []).map((d) => (
+              <tr key={d.id}>
+                <td className="px-5 py-3 text-slate-500 whitespace-nowrap">{d.tanggal}</td>
+                <td className="px-5 py-3">
+                  {d.jam_mulai || '—'} - {d.jam_selesai || '—'}
+                  {d.catatan ? ` — ${d.catatan}` : ''}
+                </td>
+              </tr>
+            ))}
+            {!dutySaya?.length && <tr><td className="px-5 py-6 text-center text-slate-400">Belum ada laporan duty.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-2xl p-5">
         <h2 className="font-bold text-navy-950 mb-3 text-sm">Setor Hasil Modif</h2>
         <SetoranModifForm workshopId={mekanik.workshop_id} mekanikId={mekanik.id} />
       </div>
@@ -46,7 +71,10 @@ export default async function PanelWorkshopPage() {
             {(setoranSaya || []).map((s) => (
               <tr key={s.id}>
                 <td className="px-5 py-3 text-slate-500 whitespace-nowrap">{s.tanggal}</td>
-                <td className="px-5 py-3">Rp {Number(s.jumlah).toLocaleString('id-ID')}{s.catatan ? ` — ${s.catatan}` : ''}</td>
+                <td className="px-5 py-3">
+                  Rp {Number(s.jumlah).toLocaleString('id-ID')} · Kompo keluar {s.komponen_keluar ?? 0} · Sisa kompo {s.sisa_komponen ?? 0}
+                  {s.catatan ? ` — ${s.catatan}` : ''}
+                </td>
               </tr>
             ))}
             {!setoranSaya?.length && <tr><td className="px-5 py-6 text-center text-slate-400">Belum pernah setor.</td></tr>}
