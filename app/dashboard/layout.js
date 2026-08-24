@@ -6,7 +6,7 @@ import LogoutButton from '@/components/LogoutButton';
 const WORKSHOP_ITEMS = [
   { href: '/dashboard/workshop', label: 'Workshop' },
   { href: '/dashboard/mekanik', label: 'Anggota Mekanik' },
-  { href: '/dashboard/gudang-workshop', label: 'Gudang Workshop' },
+  { href: '/dashboard/logs-komponen', label: 'Logs Komponen' },
   { href: '/dashboard/setoran-modif', label: 'Setoran Modif' },
   { href: '/dashboard/duty-mekanik', label: 'Log Duty Mekanik' },
   { href: '/dashboard/komponen-tracking', label: 'Data Komponen' },
