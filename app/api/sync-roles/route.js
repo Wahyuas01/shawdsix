@@ -67,20 +67,23 @@ export async function POST() {
   // Sinkron juga baris mekanik miliknya supaya otomatis muncul di data modul
   // (workshop pertama yang cocok).
   const allWorkshopIds = [...result.admin_workshop_ids, ...result.member_workshop_ids];
+  let mekanikError = null;
   if (allWorkshopIds.length) {
     const { data: existing } = await admin.from('mekanik').select('id').eq('profile_id', user.id).maybeSingle();
     if (existing) {
-      await admin.from('mekanik').update({ workshop_id: allWorkshopIds[0], status: 'Aktif' }).eq('id', existing.id);
+      const { error } = await admin.from('mekanik').update({ workshop_id: allWorkshopIds[0], status: 'Aktif' }).eq('id', existing.id);
+      mekanikError = error?.message || null;
     } else {
-      await admin.from('mekanik').insert({
+      const { error } = await admin.from('mekanik').insert({
         nama: profile.discord_username || 'Mekanik',
         workshop_id: allWorkshopIds[0],
         profile_id: user.id,
         status: 'Aktif',
         jabatan: result.admin_workshop_ids.includes(allWorkshopIds[0]) ? 'Kepala Workshop' : 'Mekanik',
       });
+      mekanikError = error?.message || null;
     }
   }
 
-  return NextResponse.json({ ok: true, ...result });
+  return NextResponse.json({ ok: true, ...result, discord_role_count: discordRoleIds.length, mekanik_error: mekanikError });
 }
