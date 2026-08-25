@@ -40,7 +40,7 @@ export default async function LogsKomponenPage() {
           tanggal: m.tanggal,
           tipe: 'Masuk',
           jumlah: Number(m.jumlah_masuk) || 0,
-          detail: `${m.komponen || 'Komponen'}${m.mekanik?.nama ? ' — ke ' + m.mekanik.nama : ''}`,
+          detail: `Komponen${m.mekanik?.nama ? ' — ke ' + m.mekanik.nama : ''}`,
         })),
         ...(keluar || []).map((s) => ({
           id: 'keluar-' + s.id,

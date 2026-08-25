@@ -7,11 +7,10 @@ async function count(supabase, table) {
 
 export default async function DashboardHome() {
   const supabase = createClient();
-  const [workshop, mekanik, setoranModif, lamaran] = await Promise.all([
+  const [workshop, mekanik, setoranModif] = await Promise.all([
     count(supabase, 'workshop'),
     count(supabase, 'mekanik'),
     count(supabase, 'setoran_modif'),
-    count(supabase, 'lamaran_mekanik'),
   ]);
 
   const Card = ({ n, label }) => (
@@ -29,11 +28,10 @@ export default async function DashboardHome() {
       </div>
       <div>
         <h2 className="font-bold text-navy-950 mb-3">Workshop</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <Card n={workshop} label="Workshop" />
           <Card n={mekanik} label="Mekanik" />
           <Card n={setoranModif} label="Setoran Modif" />
-          <Card n={lamaran} label="Lamaran Masuk" />
         </div>
       </div>
     </div>

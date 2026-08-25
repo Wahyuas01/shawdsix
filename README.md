@@ -14,7 +14,7 @@ Next.js (App Router) + Supabase + Vercel. Fokus portal ini: **Workshop & Mekanik
 - Route `/dashboard/*` diproteksi otomatis lewat `middleware.js` — belum login akan dilempar ke `/login`.
 - Halaman `/` (Home, publik) menampilkan hero + statistik Workshop & Mekanik langsung dari database.
 - `components/CrudTable.js` — komponen CRUD generik (tabel + modal tambah/edit/hapus, mendukung dropdown relasi & upload screenshot) yang tersambung ke Supabase.
-- **Semua modul Workshop tersambung ke Supabase**: Workshop, Anggota Mekanik, Logs Komponen (gabungan otomatis masuk/keluar + reset periodik), Data Komponen (form Komponen Masuk), Setoran Modif (+ screenshot & komponen keluar/sisa), Log Duty Mekanik, Data Uang, List Gaji, Lamaran Mekanik, Blacklist, Log Anggota, Report Mingguan, Rating Mekanik.
+- **Semua modul Workshop tersambung ke Supabase**: Workshop, Anggota Mekanik, Logs Komponen (gabungan otomatis masuk/keluar + reset periodik), Data Komponen (form Komponen Masuk), Setoran Modif (+ screenshot & komponen keluar/sisa), Log Duty Mekanik, List Gaji, Blacklist.
 - **Chat Komunitas** pakai Supabase Realtime — pesan baru langsung muncul tanpa refresh.
 - **Panel Mekanik Saya** — buat mekanik: setor hasil modif, lapor duty, lihat gaji & rating sendiri.
 - **Panel Warga** — buat yang belum jadi mekanik: lihat daftar mekanik, ajukan lamaran, pantau log keluar/masuk/warning.
@@ -28,6 +28,7 @@ Next.js (App Router) + Supabase + Vercel. Fokus portal ini: **Workshop & Mekanik
    3. `supabase/003_duty_dan_komponen.sql`
    4. `supabase/004_hapus_badside.sql` (skip kalau kamu belum pernah bikin modul Badside di database ini sama sekali)
    5. `supabase/005_logs_komponen.sql` (ganti Gudang Workshop jadi Logs Komponen, sederhanakan Data Komponen)
+   6. `supabase/006_hapus_modul_dan_nama_komponen.sql` (hapus Data Uang, Log Anggota, Rating Mekanik, Report Mingguan, Lamaran Mekanik; komponen jadi generik tanpa nama)
 3. Buka **Authentication > Providers > Discord**, aktifkan, isi Client ID & Secret dari [Discord Developer Portal](https://discord.com/developers/applications) (buat aplikasi baru → OAuth2 → tambahkan redirect URL: `https://<project-ref>.supabase.co/auth/v1/callback`).
 4. Copy `Project URL`, `anon public key`, dan **`service_role` key** dari **Project Settings > API**.
 

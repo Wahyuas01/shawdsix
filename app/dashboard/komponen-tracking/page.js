@@ -5,7 +5,6 @@ import { getPermissions, visibleWorkshopIds } from '@/lib/permissions';
 const FIELDS = [
   { name: 'workshop_id', label: 'Workshop', type: 'relation', rel: 'workshop' },
   { name: 'mekanik_id', label: 'Diberikan ke Mekanik (opsional)', type: 'relation', rel: 'mekanik' },
-  { name: 'komponen', label: 'Komponen', type: 'text' },
   { name: 'jumlah_masuk', label: 'Komponen Masuk', type: 'number' },
   { name: 'tanggal', label: 'Tanggal', type: 'date' },
 ];

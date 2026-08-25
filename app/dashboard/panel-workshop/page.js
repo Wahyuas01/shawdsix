@@ -10,30 +10,17 @@ export default async function PanelWorkshopPage() {
   const { data: mekanik } = await supabase.from('mekanik').select('*, workshop(*)').eq('profile_id', user.id).maybeSingle();
   if (!mekanik) redirect('/dashboard');
 
-  const [{ data: setoranSaya }, { data: gajiSaya }, { data: ratingSaya }, { data: dutySaya }] = await Promise.all([
+  const [{ data: setoranSaya }, { data: gajiSaya }, { data: dutySaya }] = await Promise.all([
     supabase.from('setoran_modif').select('*').eq('mekanik_id', mekanik.id).order('tanggal', { ascending: false }),
     supabase.from('gaji').select('*').eq('mekanik_id', mekanik.id).order('created_at', { ascending: false }),
-    supabase.from('rating_mekanik').select('*').eq('mekanik_id', mekanik.id).order('tanggal', { ascending: false }),
     supabase.from('duty_mekanik').select('*').eq('mekanik_id', mekanik.id).order('tanggal', { ascending: false }).limit(15),
   ]);
 
-  const avgRating = ratingSaya?.length
-    ? (ratingSaya.reduce((s, r) => s + Number(r.rating), 0) / ratingSaya.length).toFixed(1)
-    : null;
-
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-extrabold text-xl text-navy-950">{mekanik.workshop?.nama}</h1>
-          <p className="text-sm text-slate-500">Panel mekanik — {mekanik.jabatan} · {mekanik.nama}</p>
-        </div>
-        {avgRating && (
-          <div className="text-right">
-            <div className="font-extrabold text-navy-950">★ {avgRating}</div>
-            <div className="text-xs text-slate-500">{ratingSaya.length} rating</div>
-          </div>
-        )}
+      <div>
+        <h1 className="font-extrabold text-xl text-navy-950">{mekanik.workshop?.nama}</h1>
+        <p className="text-sm text-slate-500">Panel mekanik — {mekanik.jabatan} · {mekanik.nama}</p>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-5">

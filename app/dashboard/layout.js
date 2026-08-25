@@ -10,13 +10,8 @@ const WORKSHOP_ITEMS = [
   { href: '/dashboard/setoran-modif', label: 'Setoran Modif' },
   { href: '/dashboard/duty-mekanik', label: 'Log Duty Mekanik' },
   { href: '/dashboard/komponen-tracking', label: 'Data Komponen' },
-  { href: '/dashboard/keuangan-workshop', label: 'Data Uang' },
   { href: '/dashboard/gaji', label: 'List Gaji' },
-  { href: '/dashboard/lamaran-mekanik', label: 'Lamaran Mekanik' },
   { href: '/dashboard/blacklist-workshop', label: 'Blacklist' },
-  { href: '/dashboard/logs-workshop', label: 'Log Anggota' },
-  { href: '/dashboard/report-mingguan', label: 'Report Mingguan' },
-  { href: '/dashboard/rating-mekanik', label: 'Rating Mekanik' },
   { href: '/dashboard/chat', label: 'Chat Komunitas' },
 ];
 
