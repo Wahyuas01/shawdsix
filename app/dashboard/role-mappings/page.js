@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getCachedUser } from '@/lib/supabase/get-user';
 import { redirect } from 'next/navigation';
 import CrudTable from '@/components/CrudTable';
 
@@ -14,7 +15,7 @@ const FIELDS = [
 
 export default async function RoleMappingsPage() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCachedUser();
   const { data: perms } = await supabase.from('profile_permissions').select('is_super_admin').eq('id', user.id).single();
   if (!perms?.is_super_admin) redirect('/dashboard');
 

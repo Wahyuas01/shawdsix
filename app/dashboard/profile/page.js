@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
+import { getCachedUser } from '@/lib/supabase/get-user';
 import SyncRolesButton from '@/components/SyncRolesButton';
 
 export default async function ProfilePage() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCachedUser();
 
   const [{ data: profile }, { data: perms }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),

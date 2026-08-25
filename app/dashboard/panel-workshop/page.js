@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
+import { getCachedUser } from '@/lib/supabase/get-user';
 import { redirect } from 'next/navigation';
 import SetoranModifForm from '@/components/SetoranModifForm';
 import DutyForm from '@/components/DutyForm';
 
 export default async function PanelWorkshopPage() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCachedUser();
 
   const { data: mekanik } = await supabase.from('mekanik').select('*, workshop(*)').eq('profile_id', user.id).maybeSingle();
   if (!mekanik) redirect('/dashboard');

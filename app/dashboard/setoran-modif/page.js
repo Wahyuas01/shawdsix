@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getCachedUser } from '@/lib/supabase/get-user';
 import CrudTable from '@/components/CrudTable';
 import { getPermissions, visibleWorkshopIds } from '@/lib/permissions';
 
@@ -16,7 +17,7 @@ const FIELDS = [
 
 export default async function Page() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCachedUser();
   const perm = await getPermissions(supabase, user.id);
   const ids = visibleWorkshopIds(perm);
 

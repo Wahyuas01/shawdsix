@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getCachedUser } from '@/lib/supabase/get-user';
 import CrudTable from '@/components/CrudTable';
 import { getPermissions, visibleWorkshopIds } from '@/lib/permissions';
 
@@ -12,7 +13,7 @@ const FIELDS = [
 
 export default async function Page() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCachedUser();
   const perm = await getPermissions(supabase, user.id);
   const ids = visibleWorkshopIds(perm);
 
@@ -24,5 +25,12 @@ export default async function Page() {
   ]);
   const relations = { workshop: (workshop || []).map((w) => ({ id: w.id, label: w.nama })) };
   const canManage = perm.isSuperAdmin || perm.adminWorkshopIds.length > 0;
-  return <CrudTable table="mekanik" label="Anggota Mekanik" fields={FIELDS} rows={rows || []} relations={relations} canManage={canManage} />;
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-slate-500 bg-blue-50 text-brandblue-700 rounded-lg px-3 py-2">
+        Anggota mekanik cuma bisa masuk otomatis lewat sinkron role Discord (atur di halaman Role Mappings). Admin cuma bisa edit jabatan/status atau hapus, nggak bisa tambah manual.
+      </p>
+      <CrudTable table="mekanik" label="Anggota Mekanik" fields={FIELDS} rows={rows || []} relations={relations} canCreate={false} canEdit={canManage} />
+    </div>
+  );
 }
