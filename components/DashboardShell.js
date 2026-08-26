@@ -7,7 +7,7 @@ export default function DashboardShell({ nav, profile, children }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 lg:flex">
       {/* Top bar - cuma muncul di mobile/tablet */}
       <header className="lg:hidden sticky top-0 z-30 h-14 bg-navy-950 text-white flex items-center justify-between px-4">
         <button onClick={() => setOpen(true)} className="p-1.5 -ml-1.5 rounded-lg hover:bg-white/10" aria-label="Buka menu">
@@ -82,7 +82,7 @@ export default function DashboardShell({ nav, profile, children }) {
         </div>
       </aside>
 
-      <main className="lg:ml-64 p-4 sm:p-6 lg:p-8">{children}</main>
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">{children}</main>
     </div>
   );
 }
