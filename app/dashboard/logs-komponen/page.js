@@ -72,7 +72,8 @@ export default async function LogsKomponenPage() {
             <span className="font-bold text-navy-950 text-sm">{workshop.nama}</span>
             {canManage && <ResetKomponenButton workshopId={workshop.id} hasExistingPeriod={hasExistingPeriod} />}
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[480px]">
             <tbody className="divide-y divide-slate-100">
               {entries.map((e) => (
                 <tr key={e.id}>
@@ -94,6 +95,7 @@ export default async function LogsKomponenPage() {
               </tr>
             </tfoot>
           </table>
+          </div>
         </div>
       ))}
     </div>
