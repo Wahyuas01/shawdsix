@@ -29,45 +29,9 @@ export default async function PanelWorkshopPage() {
         <DutyForm workshopId={mekanik.workshop_id} mekanikId={mekanik.id} />
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-200 font-bold text-navy-950 text-sm">Laporan Duty Saya</div>
-        <table className="w-full text-sm">
-          <tbody className="divide-y divide-slate-100">
-            {(dutySaya || []).map((d) => (
-              <tr key={d.id}>
-                <td className="px-5 py-3 text-slate-500 whitespace-nowrap">{d.tanggal}</td>
-                <td className="px-5 py-3">
-                  {d.jam_mulai || '—'} - {d.jam_selesai || '—'}
-                  {d.catatan ? ` — ${d.catatan}` : ''}
-                </td>
-              </tr>
-            ))}
-            {!dutySaya?.length && <tr><td className="px-5 py-6 text-center text-slate-400">Belum ada laporan duty.</td></tr>}
-          </tbody>
-        </table>
-      </div>
-
       <div className="bg-white border border-slate-200 rounded-2xl p-5">
         <h2 className="font-bold text-navy-950 mb-3 text-sm">Setor Hasil Modif</h2>
         <SetoranModifForm workshopId={mekanik.workshop_id} mekanikId={mekanik.id} />
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-200 font-bold text-navy-950 text-sm">Riwayat Setoran Modif Saya</div>
-        <table className="w-full text-sm">
-          <tbody className="divide-y divide-slate-100">
-            {(setoranSaya || []).map((s) => (
-              <tr key={s.id}>
-                <td className="px-5 py-3 text-slate-500 whitespace-nowrap">{s.tanggal}</td>
-                <td className="px-5 py-3">
-                  Rp {Number(s.jumlah).toLocaleString('id-ID')} · Kompo keluar {s.komponen_keluar ?? 0} · Sisa kompo {s.sisa_komponen ?? 0}
-                  {s.catatan ? ` — ${s.catatan}` : ''}
-                </td>
-              </tr>
-            ))}
-            {!setoranSaya?.length && <tr><td className="px-5 py-6 text-center text-slate-400">Belum pernah setor.</td></tr>}
-          </tbody>
-        </table>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
@@ -84,6 +48,42 @@ export default async function PanelWorkshopPage() {
               </tr>
             ))}
             {!gajiSaya?.length && <tr><td className="px-5 py-6 text-center text-slate-400">Belum ada data gaji.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-200 font-bold text-navy-950 text-sm">Laporan Duty Saya</div>
+        <table className="w-full text-sm">
+          <tbody className="divide-y divide-slate-100">
+            {(dutySaya || []).map((d) => (
+              <tr key={d.id}>
+                <td className="px-5 py-3 text-slate-500 whitespace-nowrap">{d.tanggal}</td>
+                <td className="px-5 py-3">
+                  {d.jam_mulai || '—'} - {d.jam_selesai || '—'}
+                  {d.catatan ? ` — ${d.catatan}` : ''}
+                </td>
+              </tr>
+            ))}
+            {!dutySaya?.length && <tr><td className="px-5 py-6 text-center text-slate-400">Belum ada laporan duty.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+  
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-200 font-bold text-navy-950 text-sm">Riwayat Setoran Modif Saya</div>
+        <table className="w-full text-sm">
+          <tbody className="divide-y divide-slate-100">
+            {(setoranSaya || []).map((s) => (
+              <tr key={s.id}>
+                <td className="px-5 py-3 text-slate-500 whitespace-nowrap">{s.tanggal}</td>
+                <td className="px-5 py-3">
+                  Rp {Number(s.jumlah).toLocaleString('id-ID')} · Kompo keluar {s.komponen_keluar ?? 0} · Sisa kompo {s.sisa_komponen ?? 0}
+                  {s.catatan ? ` — ${s.catatan}` : ''}
+                </td>
+              </tr>
+            ))}
+            {!setoranSaya?.length && <tr><td className="px-5 py-6 text-center text-slate-400">Belum pernah setor.</td></tr>}
           </tbody>
         </table>
       </div>
