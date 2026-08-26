@@ -10,6 +10,8 @@ const FIELDS = [
   { name: 'jam_mulai', label: 'Jam Mulai', type: 'time' },
   { name: 'jam_selesai', label: 'Jam Selesai', type: 'time' },
   { name: 'catatan', label: 'Catatan', type: 'textarea' },
+  { name: 'foto_on_duty_url', label: 'Screenshot On Duty', type: 'file' },
+  { name: 'foto_off_duty_url', label: 'Screenshot Off Duty', type: 'file' },
 ];
 
 export default async function Page() {

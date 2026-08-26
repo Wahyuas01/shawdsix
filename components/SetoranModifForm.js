@@ -14,11 +14,15 @@ export default function SetoranModifForm({ workshopId, mekanikId }) {
   const [sesudah, setSesudah] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   async function upload(file) {
     const path = `setoran_modif/${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from('setoran-modif').upload(path, file);
-    if (error) return null;
+    if (error) {
+      setError('Gagal upload screenshot: ' + error.message);
+      return null;
+    }
     return supabase.storage.from('setoran-modif').getPublicUrl(path).data.publicUrl;
   }
 
@@ -26,6 +30,7 @@ export default function SetoranModifForm({ workshopId, mekanikId }) {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
+    setError(null);
     const url = await upload(file);
     if (url) setter(url);
     setUploading(false);
@@ -34,7 +39,8 @@ export default function SetoranModifForm({ workshopId, mekanikId }) {
   async function submit(e) {
     e.preventDefault();
     setSaving(true);
-    await supabase.from('setoran_modif').insert({
+    setError(null);
+    const { error: err } = await supabase.from('setoran_modif').insert({
       workshop_id: workshopId,
       mekanik_id: mekanikId,
       tanggal: new Date().toISOString().slice(0, 10),
@@ -42,10 +48,14 @@ export default function SetoranModifForm({ workshopId, mekanikId }) {
       komponen_keluar: komponenKeluar || 0,
       sisa_komponen: sisaKomponen || 0,
       catatan,
-      foto_sebelum_url: sebelum,
-      foto_sesudah_url: sesudah,
+      foto_sebelum_url: sebelum || null,
+      foto_sesudah_url: sesudah || null,
     });
     setSaving(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
     setJumlah(''); setKomponenKeluar(''); setSisaKomponen(''); setCatatan(''); setSebelum(''); setSesudah('');
     router.refresh();
   }
@@ -83,6 +93,7 @@ export default function SetoranModifForm({ workshopId, mekanikId }) {
         </div>
       </div>
       {uploading && <p className="text-xs text-slate-400">Mengunggah gambar...</p>}
+      {error && <p className="text-xs text-red-500">{error}</p>}
       <button disabled={saving} className="bg-brandblue-600 hover:bg-brandblue-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2 rounded-lg">
         {saving ? 'Menyimpan...' : 'Kirim Setoran'}
       </button>

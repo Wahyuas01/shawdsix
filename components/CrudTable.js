@@ -88,7 +88,10 @@ export default function CrudTable({ table, label, fields, rows, relations = {}, 
     router.refresh();
   }
 
-  const displayFields = fields.filter((f) => f.type !== 'textarea' && f.type !== 'file').slice(0, 6);
+  // Kolom teks/relasi/dll masuk tabel seperti biasa; kolom bertipe 'file'
+  // (screenshot) ikut ditampilkan sebagai thumbnail kecil, bukan disembunyikan,
+  // biar admin bisa langsung lihat gambarnya tanpa perlu buka Edit dulu.
+  const displayFields = fields.filter((f) => f.type !== 'textarea').slice(0, 8);
 
   return (
     <div>
@@ -119,7 +122,15 @@ export default function CrudTable({ table, label, fields, rows, relations = {}, 
               <tr key={r.id}>
                 {displayFields.map((f) => (
                   <td key={f.name} className="px-4 py-3 whitespace-nowrap">
-                    {f.type === 'relation' ? relLabel(f.rel, r[f.name]) : String(r[f.name] ?? '—')}
+                    {f.type === 'relation'
+                      ? relLabel(f.rel, r[f.name])
+                      : f.type === 'file'
+                        ? (r[f.name] ? (
+                            <a href={r[f.name]} target="_blank" rel="noreferrer">
+                              <img src={r[f.name]} alt={f.label} className="w-10 h-10 rounded-lg object-cover border border-slate-200" />
+                            </a>
+                          ) : <span className="text-slate-300">—</span>)
+                        : String(r[f.name] ?? '—')}
                   </td>
                 ))}
                 {allowEdit && (
