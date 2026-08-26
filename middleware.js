@@ -22,7 +22,16 @@ export async function middleware(request) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Sesi/refresh token nggak valid lagi (mis. web ditinggal lama, token
+    // kadaluwarsa/dicabut). Anggap aja belum login, jangan biarin ini
+    // nge-crash seluruh server — cukup lempar ke halaman Login.
+    user = null;
+  }
 
   // /dashboard/* wajib login, redirect ke /login jika belum
   if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {

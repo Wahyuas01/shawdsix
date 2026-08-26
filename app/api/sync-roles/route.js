@@ -14,8 +14,14 @@ import { NextResponse } from 'next/server';
  */
 export async function POST() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    user = null;
+  }
+  if (!user) return NextResponse.json({ error: 'Sesi login kamu sudah kadaluwarsa, coba logout lalu login ulang.' }, { status: 401 });
 
   const admin = createAdminClient();
 
