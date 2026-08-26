@@ -44,7 +44,7 @@ export default async function HomePage() {
           <Link href="/dashboard" className="w-full sm:w-auto bg-brandblue-600 hover:bg-brandblue-700 px-6 py-3 rounded-xl text-sm font-bold shadow-lg">
             Buka Dashboard
           </Link>
-          <a href="https://discord.gg/your-invite" className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold border border-white/20 hover:bg-white/10">
+          <a href="https://discord.gg/XvpQbGBZgX" className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold border border-white/20 hover:bg-white/10">
             Join Discord
           </a>
         </div>
