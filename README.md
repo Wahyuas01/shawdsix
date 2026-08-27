@@ -98,7 +98,15 @@ const canManage = perm.isSuperAdmin || perm.adminWorkshopIds.length > 0;
 
 RLS di `roles_and_permissions.sql` tetap jadi penegak utama — kode di atas murni buat UX.
 
-## 8. Upload screenshot & realtime
+## 8. Reset / Tutup Periode
+
+Halaman **Setoran Modif**, **Log Duty Mekanik**, **Data Komponen**, dan **List Gaji** punya tombol **"Tutup Periode & Reset"** (cuma kelihatan buat admin workshop). Klik ini **menghapus permanen** semua data yang lagi ditampilkan di halaman itu (sesuai workshop yang dikelola admin tersebut) — dipakai buat nutup laporan mingguan/periodik, habis itu data mulai kosong lagi buat periode berikutnya.
+
+⚠️ Ini beneran hapus data, bukan cuma sembunyiin. Termasuk **Setoran Modif** — kalau di-reset, total di leaderboard Home ikut berubah (soalnya leaderboard ngitung dari data yang masih ada di tabel). Pastikan sudah dicatat/screenshot buat report sebelum klik tombol ini.
+
+Komponennya reusable: `components/PeriodResetButton.js` menerima `table`, `column` (kolom buat filter, biasanya `workshop_id`, tapi List Gaji pakai `mekanik_id` karena tabelnya nggak punya `workshop_id` langsung), `ids` (daftar id yang boleh dihapus), dan `allRows` (khusus Super Admin yang nggak terikat satu workshop).
+
+## 9. Upload screenshot & realtime
 
 - **Setoran Modif**: field `foto_sebelum_url` / `foto_sesudah_url` pakai tipe `'file'` di `CrudTable`, otomatis upload ke bucket `setoran-modif`.
 - **Chat Komunitas**: subscribe ke Supabase Realtime (`postgres_changes` tabel `chat_messages`).

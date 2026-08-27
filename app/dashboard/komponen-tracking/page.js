@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getCachedUser } from '@/lib/supabase/get-user';
 import CrudTable from '@/components/CrudTable';
+import PeriodResetButton from '@/components/PeriodResetButton';
 import { getPermissions, visibleWorkshopIds } from '@/lib/permissions';
 
 const FIELDS = [
@@ -29,5 +30,12 @@ export default async function Page() {
     mekanik: (mekanik || []).map((m) => ({ id: m.id, label: m.nama })),
   };
   const canManage = perm.isSuperAdmin || perm.adminWorkshopIds.length > 0;
-  return <CrudTable table="komponen_tracking" label="Data Komponen (Masuk)" fields={FIELDS} rows={rows || []} relations={relations} canManage={canManage} />;
+  return (
+    <div>
+      {canManage && (
+        <PeriodResetButton table="komponen_tracking" column="workshop_id" ids={ids} allRows={perm.isSuperAdmin && ids.length === 0} label="Data Komponen" />
+      )}
+      <CrudTable table="komponen_tracking" label="Data Komponen (Masuk)" fields={FIELDS} rows={rows || []} relations={relations} canManage={canManage} />
+    </div>
+  );
 }

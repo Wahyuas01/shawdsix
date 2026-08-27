@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getCachedUser } from '@/lib/supabase/get-user';
 import CrudTable from '@/components/CrudTable';
+import PeriodResetButton from '@/components/PeriodResetButton';
 import { getPermissions, visibleWorkshopIds } from '@/lib/permissions';
 
 const FIELDS = [
@@ -35,5 +36,12 @@ export default async function Page() {
   // Mekanik (member workshop) boleh setor sendiri, ubah/hapus khusus admin workshop.
   const canCreate = perm.isSuperAdmin || ids.length > 0;
   const canEdit = perm.isSuperAdmin || perm.adminWorkshopIds.length > 0;
-  return <CrudTable table="setoran_modif" label="Setoran Modif" fields={FIELDS} rows={rows || []} relations={relations} canCreate={canCreate} canEdit={canEdit} />;
+  return (
+    <div>
+      {canEdit && (
+        <PeriodResetButton table="setoran_modif" column="workshop_id" ids={ids} allRows={perm.isSuperAdmin && ids.length === 0} label="Setoran Modif" />
+      )}
+      <CrudTable table="setoran_modif" label="Setoran Modif" fields={FIELDS} rows={rows || []} relations={relations} canCreate={canCreate} canEdit={canEdit} />
+    </div>
+  );
 }
