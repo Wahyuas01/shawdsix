@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
-import Link from 'next/link';
+import { getCachedUser } from '@/lib/supabase/get-user';
+import HomeCta from '@/components/HomeCta';
 
 export default async function HomePage() {
   const supabase = createClient();
-  const [{ count: workshopCount }, { count: mekanikCount }, { data: setoranAll }] = await Promise.all([
+  const [user, { count: workshopCount }, { count: mekanikCount }, { data: setoranAll }] = await Promise.all([
+    getCachedUser(),
     supabase.from('workshop').select('*', { count: 'exact', head: true }),
     supabase.from('mekanik').select('*', { count: 'exact', head: true }),
     supabase.from('setoran_modif').select('jumlah, mekanik_id, mekanik(nama)'),
@@ -41,10 +43,8 @@ export default async function HomePage() {
           Kelola workshop, gudang komponen, dan mekanik dalam satu tempat — transparan dan mudah diakses seluruh anggota.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
-          <Link href="/dashboard" className="w-full sm:w-auto bg-brandblue-600 hover:bg-brandblue-700 px-6 py-3 rounded-xl text-sm font-bold shadow-lg">
-            Buka Dashboard
-          </Link>
-          <a href="https://discord.gg/XvpQbGBZgX" className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold border border-white/20 hover:bg-white/10">
+          <HomeCta loggedIn={!!user} />
+          <a href="https://discord.gg/your-invite" className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold border border-white/20 hover:bg-white/10">
             Join Discord
           </a>
         </div>

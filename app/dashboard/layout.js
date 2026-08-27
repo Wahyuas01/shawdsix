@@ -18,7 +18,7 @@ const WORKSHOP_ITEMS = [
 export default async function DashboardLayout({ children }) {
   const supabase = createClient();
   const user = await getCachedUser();
-  if (!user) redirect('/login');
+  if (!user) redirect('/');
 
   const [{ data: profile }, { data: perms }] = await Promise.all([
     supabase.from('profiles').select('discord_username, avatar_url').eq('id', user.id).single(),

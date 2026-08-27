@@ -33,10 +33,10 @@ export async function middleware(request) {
     user = null;
   }
 
-  // /dashboard/* wajib login, redirect ke /login jika belum
+  // /dashboard/* wajib login, redirect ke Home kalau belum (atau sesinya kadaluwarsa)
   if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = '/login';
+    url.pathname = '/';
     return NextResponse.redirect(url);
   }
 
