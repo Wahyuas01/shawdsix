@@ -67,11 +67,19 @@ export default async function PanelWargaPage() {
         ) : (
           <>
             {lamaranSaya?.status && (
-              <p className="text-xs text-slate-500 mb-3">
-                Lamaran kamu sebelumnya ke <strong>{lamaranSaya.workshop?.nama || 'workshop'}</strong> berstatus{' '}
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_STYLE[lamaranSaya.status]}`}>{lamaranSaya.status}</span>.
-                {lamaranSaya.status === 'Ditolak' ? ' Kamu boleh coba apply lagi di bawah ini.' : ''}
-              </p>
+              <div className="mb-3">
+                <p className="text-xs text-slate-500">
+                  Lamaran kamu sebelumnya ke <strong>{lamaranSaya.workshop?.nama || 'workshop'}</strong> berstatus{' '}
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_STYLE[lamaranSaya.status]}`}>{lamaranSaya.status}</span>.
+                  {lamaranSaya.status === 'Ditolak' ? ' Kamu boleh coba apply lagi di bawah ini.' : ''}
+                </p>
+                {lamaranSaya.catatan && (
+                  <div className="mt-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                    <p className="text-[11px] font-semibold text-slate-500 mb-0.5">Catatan dari Admin</p>
+                    <p className="text-xs text-slate-700">{lamaranSaya.catatan}</p>
+                  </div>
+                )}
+              </div>
             )}
             <p className="text-xs text-slate-500 mb-3">Isi form ini lengkap dan jujur, admin bakal cek sebelum diproses.</p>
             <LamaranForm workshops={workshops || []} userId={user.id} />
