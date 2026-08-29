@@ -11,6 +11,7 @@ const WORKSHOP_ITEMS = [
   { href: '/dashboard/duty-mekanik', label: 'Log Duty Mekanik' },
   { href: '/dashboard/komponen-tracking', label: 'Data Komponen' },
   { href: '/dashboard/gaji', label: 'List Gaji' },
+  { href: '/dashboard/lamaran-mekanik', label: 'Lamaran Mekanik' },
   { href: '/dashboard/blacklist-workshop', label: 'Blacklist' },
   { href: '/dashboard/chat', label: 'Chat Komunitas' },
 ];

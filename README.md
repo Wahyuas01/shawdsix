@@ -30,6 +30,8 @@ Next.js (App Router) + Supabase + Vercel. Fokus portal ini: **Workshop & Mekanik
    5. `supabase/005_logs_komponen.sql` (ganti Gudang Workshop jadi Logs Komponen, sederhanakan Data Komponen)
    6. `supabase/006_hapus_modul_dan_nama_komponen.sql` (hapus Data Uang, Log Anggota, Rating Mekanik, Report Mingguan, Lamaran Mekanik; komponen jadi generik tanpa nama)
    7. `supabase/007_akses_publik_home.sql` (buka baca publik buat statistik & leaderboard di Home)
+   8. `supabase/008_screenshot_duty.sql` (screenshot On Duty & Off Duty di Log Duty Mekanik)
+   9. `supabase/009_lamaran_mekanik.sql` (modul Lamaran Mekanik: UCP, Nama IC, Umur, Family, 3 screenshot — satu lamaran aktif per warga)
 3. Buka **Authentication > Providers > Discord**, aktifkan, isi Client ID & Secret dari [Discord Developer Portal](https://discord.com/developers/applications) (buat aplikasi baru → OAuth2 → tambahkan redirect URL: `https://<project-ref>.supabase.co/auth/v1/callback`).
 4. Copy `Project URL`, `anon public key`, dan **`service_role` key** dari **Project Settings > API**.
 
