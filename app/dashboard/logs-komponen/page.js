@@ -41,6 +41,7 @@ export default async function LogsKomponenPage() {
           tanggal: m.tanggal,
           tipe: 'Masuk',
           jumlah: Number(m.jumlah_masuk) || 0,
+          mekanikNama: m.mekanik?.nama || null,
           detail: `Komponen${m.mekanik?.nama ? ' — ke ' + m.mekanik.nama : ''}`,
         })),
         ...(keluar || []).map((s) => ({
@@ -48,6 +49,7 @@ export default async function LogsKomponenPage() {
           tanggal: s.tanggal,
           tipe: 'Keluar',
           jumlah: Number(s.komponen_keluar) || 0,
+          mekanikNama: s.mekanik?.nama || null,
           detail: `Setoran modif — ${s.mekanik?.nama || 'Mekanik'}${s.catatan ? ' · ' + s.catatan : ''}`,
         })),
       ].sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1));
@@ -55,7 +57,17 @@ export default async function LogsKomponenPage() {
       const totalMasuk = entries.filter((e) => e.tipe === 'Masuk').reduce((s, e) => s + e.jumlah, 0);
       const totalKeluar = entries.filter((e) => e.tipe === 'Keluar').reduce((s, e) => s + e.jumlah, 0);
 
-      return { workshop: w, entries, totalMasuk, totalKeluar, hasExistingPeriod: !!periodMap[w.id] };
+      // Rincian per mekanik — masuk yang nggak diarahkan ke mekanik tertentu masuk "Umum".
+      const perMekanikMap = {};
+      for (const e of entries) {
+        const key = e.mekanikNama || 'Umum (nggak ke mekanik tertentu)';
+        if (!perMekanikMap[key]) perMekanikMap[key] = { nama: key, masuk: 0, keluar: 0 };
+        if (e.tipe === 'Masuk') perMekanikMap[key].masuk += e.jumlah;
+        else perMekanikMap[key].keluar += e.jumlah;
+      }
+      const perMekanik = Object.values(perMekanikMap).sort((a, b) => (b.masuk + b.keluar) - (a.masuk + a.keluar));
+
+      return { workshop: w, entries, totalMasuk, totalKeluar, perMekanik, hasExistingPeriod: !!periodMap[w.id] };
     })
   );
 
@@ -66,7 +78,7 @@ export default async function LogsKomponenPage() {
         <p className="text-sm text-slate-500">Gabungan otomatis komponen masuk (Data Komponen) dan keluar (Setoran Modif).</p>
       </div>
 
-      {sections.map(({ workshop, entries, totalMasuk, totalKeluar, hasExistingPeriod }) => (
+      {sections.map(({ workshop, entries, totalMasuk, totalKeluar, perMekanik, hasExistingPeriod }) => (
         <div key={workshop.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
             <span className="font-bold text-navy-950 text-sm">{workshop.nama}</span>
@@ -89,13 +101,41 @@ export default async function LogsKomponenPage() {
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-slate-200 bg-slate-50 font-bold text-navy-950">
-                <td className="px-5 py-3" colSpan={2}>Total</td>
+                <td className="px-5 py-3" colSpan={2}>Total Keseluruhan</td>
                 <td className="px-5 py-3 text-right">Masuk {totalMasuk} · Keluar {totalKeluar}</td>
                 <td className="px-5 py-3 text-right">Sisa {totalMasuk - totalKeluar}</td>
               </tr>
             </tfoot>
           </table>
           </div>
+
+          {perMekanik.length > 0 && (
+            <div className="border-t border-slate-200">
+              <div className="px-5 py-2.5 bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500">Rincian per Mekanik</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[420px]">
+                  <thead>
+                    <tr className="text-left text-xs uppercase text-slate-500 border-b border-slate-100">
+                      <th className="px-5 py-2">Mekanik</th>
+                      <th className="px-5 py-2 text-right">Masuk</th>
+                      <th className="px-5 py-2 text-right">Keluar</th>
+                      <th className="px-5 py-2 text-right">Sisa</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {perMekanik.map((m) => (
+                      <tr key={m.nama}>
+                        <td className="px-5 py-2.5">{m.nama}</td>
+                        <td className="px-5 py-2.5 text-right text-emerald-600 font-semibold">{m.masuk}</td>
+                        <td className="px-5 py-2.5 text-right text-red-500 font-semibold">{m.keluar}</td>
+                        <td className="px-5 py-2.5 text-right font-bold text-navy-950">{m.masuk - m.keluar}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       ))}
     </div>
